@@ -7,6 +7,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
 
   CLIENT_ORIGIN: z.url().default('http://localhost:5173'),
+
+  GDELT_LASTUPDATE_URL: z.url().default('https://data.gdeltproject.org/gdeltv2/lastupdate.txt'),
 });
 
 const result = envSchema.safeParse(process.env);
