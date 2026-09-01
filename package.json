@@ -7,7 +7,10 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "infra:up": "docker compose -f compose.dev.yml up -d",
+    "infra:down": "docker compose -f compose.dev.yml down",
+    "infra:logs": "docker compose -f compose.dev.yml logs -f"
   },
   "keywords": [],
   "author": "Hojune Kim",

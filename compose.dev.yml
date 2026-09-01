@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: geo-intel-postgres
+
+    environment:
+      POSTGRES_USER: geo_intel
+      POSTGRES_PASSWORD: geo_intel_dev
+      POSTGRES_DB: geo_intel
+
+    ports:
+      - '5432:5432'
+
+    volumes:
+      - geo_intel_postgres_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U geo_intel -d geo_intel']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    container_name: geo-intel-redis
+
+    command:
+      - redis-server
+      - --appendonly
+      - 'yes'
+
+    ports:
+      - '6380:6379'
+
+    volumes:
+      - geo_intel_redis_data:/data
+
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  geo_intel_postgres_data:
+  geo_intel_redis_data:

@@ -9,6 +9,14 @@ const envSchema = z.object({
   CLIENT_ORIGIN: z.url().default('http://localhost:5173'),
 
   GDELT_LASTUPDATE_URL: z.url().default('https://data.gdeltproject.org/gdeltv2/lastupdate.txt'),
+
+  DATABASE_URL: z.url(),
+
+  REDIS_URL: z.url(),
+
+  API_CACHE_TTL_SECONDS: z.coerce.number().int().min(1).max(3600).default(60),
+
+  GDELT_MANIFEST_CACHE_TTL_SECONDS: z.coerce.number().int().min(1).max(900).default(60),
 });
 
 const result = envSchema.safeParse(process.env);
