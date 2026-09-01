@@ -1,6 +1,5 @@
-import { z } from 'zod';
-
 import { strFromU8, unzipSync } from 'fflate';
+import { z } from 'zod';
 
 import { env } from '../../config/env.js';
 import { parseGdeltExport } from './gdelt-parser.js';
@@ -58,9 +57,7 @@ async function fetchArchive(url: string): Promise<ArrayBuffer> {
 function unzipExport(buffer: ArrayBuffer): string {
   const files = unzipSync(new Uint8Array(buffer));
 
-  const entries = Object.values(files);
-
-  const firstFile = entries[0];
+  const firstFile = Object.values(files)[0];
 
   if (firstFile === undefined) {
     throw new Error('GDELT ZIP archive is empty');
@@ -69,11 +66,13 @@ function unzipExport(buffer: ArrayBuffer): string {
   return strFromU8(firstFile);
 }
 
-export async function fetchLatestGdeltEvents() {
+export async function fetchLatestGdeltExportUrl(): Promise<string> {
   const manifest = await fetchText(env.GDELT_LASTUPDATE_URL);
 
-  const exportUrl = getExportUrl(manifest);
+  return getExportUrl(manifest);
+}
 
+export async function fetchGdeltExport(exportUrl: string) {
   const archive = await fetchArchive(exportUrl);
 
   const contents = unzipExport(archive);
@@ -84,4 +83,10 @@ export async function fetchLatestGdeltEvents() {
     exportUrl,
     ...parsed,
   };
+}
+
+export async function fetchLatestGdeltEvents() {
+  const exportUrl = await fetchLatestGdeltExportUrl();
+
+  return fetchGdeltExport(exportUrl);
 }
