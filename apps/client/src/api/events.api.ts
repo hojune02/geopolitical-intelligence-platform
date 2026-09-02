@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 import { eventPageResponseSchema, type EventPageResponse } from '../schemas/event-api.schema';
 
+const rawApiBaseUrl: unknown = import.meta.env.VITE_API_BASE_URL;
+
+const apiBaseUrl = z.url().parse(rawApiBaseUrl);
+
 export interface EventQuery {
   page?: number;
   limit?: number;
@@ -69,7 +73,7 @@ export async function fetchEventPage(
   query: EventQuery,
   signal?: AbortSignal,
 ): Promise<EventPageResponse> {
-  const url = new URL('/api/v1/events', import.meta.env.VITE_API_BASE_URL);
+  const url = new URL('/api/v1/events', apiBaseUrl);
 
   appendQuery(url.searchParams, 'page', query.page);
 

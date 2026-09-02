@@ -1,17 +1,22 @@
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router';
 
+import { z } from 'zod';
+
+const routeErrorDataSchema = z.object({
+  message: z.string(),
+});
 function getErrorMessage(error: unknown): string {
   if (isRouteErrorResponse(error)) {
-    if (typeof error.data === 'string') {
-      return error.data;
+    const routeErrorData: unknown = error.data;
+
+    if (typeof routeErrorData === 'string') {
+      return routeErrorData;
     }
 
-    if (typeof error.data === 'object' && error.data !== null && 'message' in error.data) {
-      const message = error.data.message;
+    const parsed = routeErrorDataSchema.safeParse(routeErrorData);
 
-      if (typeof message === 'string') {
-        return message;
-      }
+    if (parsed.success) {
+      return parsed.data.message;
     }
 
     return error.statusText || 'The route could not be loaded.';
@@ -23,7 +28,6 @@ function getErrorMessage(error: unknown): string {
 
   return 'An unexpected error occurred.';
 }
-
 export function RouteErrorPage() {
   const error = useRouteError();
 

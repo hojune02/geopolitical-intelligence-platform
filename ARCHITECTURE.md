@@ -137,24 +137,24 @@ CAMEO event codes are also stored as text because leading zeroes are semanticall
 
 The schema stores:
 
-* event and ingestion timestamps
-* Actor1 and Actor2 metadata
-* CAMEO event, base, and root codes
-* QuadClass
-* Goldstein scale
-* root-event status
-* mention, source, and article counts
-* average tone
-* action geolocation
-* source URL
+- event and ingestion timestamps
+- Actor1 and Actor2 metadata
+- CAMEO event, base, and root codes
+- QuadClass
+- Goldstein scale
+- root-event status
+- mention, source, and article counts
+- average tone
+- action geolocation
+- source URL
 
 Database-level constraints provide an additional defensive layer for values such as:
 
-* QuadClass: `1–4`
-* Goldstein scale: `-10–10`
-* latitude: `-90–90`
-* longitude: `-180–180`
-* non-negative count metrics
+- QuadClass: `1–4`
+- Goldstein scale: `-10–10`
+- latitude: `-90–90`
+- longitude: `-180–180`
+- non-negative count metrics
 
 Indexes are defined on fields commonly used for filtering and sorting, including event date, ingestion timestamp, QuadClass, Goldstein scale, location country code, and coordinates.
 
@@ -164,13 +164,13 @@ The `ingestion_batches` table records which GDELT exports have already been proc
 
 Each batch records:
 
-* export URL
-* ingestion status
-* total parsed rows
-* accepted rows
-* rejected rows
-* number of persisted events
-* ingestion timestamp
+- export URL
+- ingestion status
+- total parsed rows
+- accepted rows
+- rejected rows
+- number of persisted events
+- ingestion timestamp
 
 The export URL acts as the batch identifier.
 
@@ -334,17 +334,17 @@ All query parameters are treated as untrusted input and validated with Zod befor
 
 Supported event filters include:
 
-* page
-* page size
-* start date
-* end date
-* geographic country code
-* actor
-* QuadClass
-* minimum Goldstein score
-* maximum Goldstein score
-* root-event status
-* north/south/east/west geographic bounds
+- page
+- page size
+- start date
+- end date
+- geographic country code
+- actor
+- QuadClass
+- minimum Goldstein score
+- maximum Goldstein score
+- root-event status
+- north/south/east/west geographic bounds
 
 Validation also checks relationships between fields.
 
@@ -412,10 +412,10 @@ week
 
 Trend responses contain metrics such as:
 
-* total event count
-* conflict-event count
-* average Goldstein scale
-* average tone
+- total event count
+- conflict-event count
+- average Goldstein scale
+- average tone
 
 Aggregation remains on the backend so the browser does not need to download large raw datasets merely to calculate chart values.
 
@@ -427,11 +427,11 @@ Database access is isolated inside repository modules.
 
 Repositories are responsible for:
 
-* constructing parameterized SQL
-* applying filters
-* pagination
-* aggregation
-* mapping database rows back into application domain objects
+- constructing parameterized SQL
+- applying filters
+- pagination
+- aggregation
+- mapping database rows back into application domain objects
 
 Database row representations are normalized before crossing back into the application layer.
 
@@ -467,10 +467,10 @@ The Express application uses centralized error middleware.
 
 Expected application errors are represented by typed `AppError` subclasses containing:
 
-* HTTP status code
-* application error code
-* user-facing message
-* optional structured details
+- HTTP status code
+- application error code
+- user-facing message
+- optional structured details
 
 For example, an invalid query returns a structured response such as:
 
@@ -589,10 +589,12 @@ Server-derived GDELT events are intentionally not stored in Zustand.
 The frontend distinguishes:
 
 Client state:
+
 - controlled directly by the user
 - stored in Zustand
 
 Server state:
+
 - controlled by the backend
 - loaded through route loaders or dedicated data hooks
 - validated with Zod
