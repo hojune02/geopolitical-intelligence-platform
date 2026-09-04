@@ -311,3 +311,34 @@ button {
   align-items: center;
   justify-content: space-between;
 }
+
+.map-shell {
+  position: relative;
+
+  width: 100%;
+  height: 70vh;
+  min-height: 520px;
+
+  overflow: hidden;
+
+  border: 1px solid #252b36;
+
+  border-radius: 0.75rem;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+}
+
+.map-mode-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.map-status {
+  display: flex;
+  gap: 1rem;
+
+  margin-bottom: 0.75rem;
+}

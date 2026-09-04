@@ -18,8 +18,6 @@ import { dashboardLoader } from './loaders/dashboard.loader';
 
 import { eventDetailLoader } from './loaders/event-detail.loader';
 
-import { heatmapLoader } from './loaders/heatmap.loader';
-
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -53,8 +51,6 @@ export const router = createBrowserRouter([
 
           {
             path: 'heatmap',
-
-            loader: heatmapLoader,
 
             Component: HeatmapPage,
           },
