@@ -598,3 +598,40 @@ Server state:
 - controlled by the backend
 - loaded through route loaders or dedicated data hooks
 - validated with Zod
+
+## Geographic Visualization Architecture
+
+The geographic intelligence view uses MapLibre GL JS to render GDELT
+events on an interactive WebGL map.
+
+The map is intentionally driven by the current viewport rather than by
+loading the entire stored event dataset into the browser.
+
+The data flow is:
+
+```text
+User opens map
+      ↓
+MapLibre initializes
+      ↓
+visible geographic bounds
+      ↓
+north / south / east / west
+      ↓
+GET /api/v1/events/map
+      ↓
+Zod query validation
+      ↓
+Redis cache
+      ↓
+PostgreSQL bounding-box query
+      ↓
+compact map-event response
+      ↓
+frontend Zod validation
+      ↓
+GeoJSON FeatureCollection
+      ↓
+MapLibre GeoJSONSource
+      ↓
+WebGL rendering
