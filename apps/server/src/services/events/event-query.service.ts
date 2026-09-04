@@ -7,6 +7,14 @@ import { env } from '../../config/env.js';
 import { findEvents, findTrends } from '../../repositories/events.repository.js';
 
 import {
+  mapEventPayloadSchema,
+  type MapEventPayload,
+  type MapEventQuery,
+} from '../../schemas/map-event.schema.js';
+
+import { findMapEvents } from '../../repositories/map-events.repository.js';
+
+import {
   eventPageSchema,
   trendsPayloadSchema,
   type EventPage,
@@ -26,6 +34,51 @@ function createCacheKey(namespace: string, version: string, query: unknown): str
 export interface CachedResult<T> {
   payload: T;
   cacheHit: boolean;
+}
+
+export async function getMapEventPage(
+  query: MapEventQuery,
+): Promise<CachedResult<MapEventPayload>> {
+  const version = await getEventCacheVersion();
+
+  const key = createCacheKey('api:map-events', version, query);
+
+  const cached = await cacheGet(key);
+
+  if (cached !== null) {
+    try {
+      const raw: unknown = JSON.parse(cached);
+
+      const result = mapEventPayloadSchema.safeParse(raw);
+
+      if (result.success) {
+        return {
+          payload: result.data,
+
+          cacheHit: true,
+        };
+      }
+
+      await cacheDelete(key);
+    } catch {
+      await cacheDelete(key);
+    }
+  }
+
+  const payload = await findMapEvents(query);
+
+  await cacheSet(
+    key,
+
+    JSON.stringify(payload),
+
+    env.API_CACHE_TTL_SECONDS,
+  );
+
+  return {
+    payload,
+    cacheHit: false,
+  };
 }
 
 export async function getEventPage(query: EventQuery): Promise<CachedResult<EventPage>> {
