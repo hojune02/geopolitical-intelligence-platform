@@ -635,3 +635,36 @@ GeoJSON FeatureCollection
 MapLibre GeoJSONSource
       ↓
 WebGL rendering
+```
+## Client Data Hooks
+
+Server-derived client data is accessed through purpose-specific custom
+React hooks.
+
+The hooks encapsulate synchronization with backend APIs while leaving
+server data outside Zustand.
+
+### Map Event Data
+
+`useMapEventData` owns:
+
+- map-event API requests
+- loading state
+- request errors
+- Redis cache metadata
+- result truncation metadata
+- stale-request cancellation
+
+The hook consumes client-controlled filter values from `useFilterStore`
+and converts them into backend query parameters.
+
+```text
+useFilterStore
+      ↓
+useMapEventData
+      ↓
+GET /api/v1/events/map
+      ↓
+server state
+      ↓
+HeatmapPage
