@@ -6,6 +6,8 @@ import { useUIStore } from '../stores/useUIStore';
 
 import { useFilterStore } from '../stores/useFilterStore';
 
+import { AnalyticsPanel } from '../components/analytics/AnalyticsPanel';
+
 export function DashboardPage() {
   const { initialEvents } = useLoaderData<DashboardLoaderData>();
 
@@ -97,7 +99,7 @@ export function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="panel">Analytics charts arrive on Day 10.</div>
+          <AnalyticsPanel />
         )}
       </section>
     </section>
