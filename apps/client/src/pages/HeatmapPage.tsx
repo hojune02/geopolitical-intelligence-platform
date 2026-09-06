@@ -1,43 +1,24 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { useNavigate } from 'react-router';
 
-import { fetchMapEvents, type MapBounds } from '../api/map.api';
+import { type MapBounds } from '../api/map.api';
 
 import { GeopoliticalMap } from '../components/map/GeopoliticalMap';
-
-import type { MapEventPoint } from '../schemas/map-event.schema';
 
 import { useFilterStore } from '../stores/useFilterStore';
 
 import { useUIStore } from '../stores/useUIStore';
+import { useMapEventData } from '../hooks/useMapEventData';
 
 export function HeatmapPage() {
   const navigate = useNavigate();
 
-  const [points, setPoints] = useState<MapEventPoint[]>([]);
-
   const [bounds, setBounds] = useState<MapBounds | null>(null);
 
-  const [loading, setLoading] = useState(true);
-
-  const [error, setError] = useState<string | null>(null);
-
-  const [truncated, setTruncated] = useState(false);
-
-  const [cacheHit, setCacheHit] = useState(false);
+  const { points, loading, error, truncated, cacheHit } = useMapEventData(bounds);
 
   const activeRegion = useFilterStore((state) => state.activeRegion);
-
-  const startDate = useFilterStore((state) => state.dateRange.startDate);
-
-  const endDate = useFilterStore((state) => state.dateRange.endDate);
-
-  const minGoldstein = useFilterStore((state) => state.conflictIntensity.minGoldstein);
-
-  const maxGoldstein = useFilterStore((state) => state.conflictIntensity.maxGoldstein);
-
-  const rootEventsOnly = useFilterStore((state) => state.rootEventsOnly);
 
   const mapMode = useUIStore((state) => state.mapMode);
 
@@ -53,63 +34,6 @@ export function HeatmapPage() {
     },
     [navigate],
   );
-
-  useEffect(() => {
-    if (bounds === null) {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    void fetchMapEvents(
-      {
-        ...bounds,
-
-        startDate: startDate ?? undefined,
-
-        endDate: endDate ?? undefined,
-
-        minGoldstein,
-
-        maxGoldstein,
-
-        isRootEvent: rootEventsOnly,
-
-        limit: 5_000,
-      },
-
-      controller.signal,
-    )
-      .then((response) => {
-        setPoints(response.data);
-
-        setTruncated(response.meta.truncated);
-
-        setCacheHit(response.cache.hit);
-      })
-      .catch((caught: unknown) => {
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        if (caught instanceof Error) {
-          setError(caught.message);
-
-          return;
-        }
-
-        setError('Unable to load map events.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, [bounds, startDate, endDate, minGoldstein, maxGoldstein, rootEventsOnly]);
 
   return (
     <section>
