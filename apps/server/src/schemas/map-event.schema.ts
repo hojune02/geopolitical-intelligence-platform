@@ -2,18 +2,15 @@ import { z } from 'zod';
 
 const booleanQuerySchema = z.enum(['true', 'false']).transform((value) => value === 'true');
 
-function normaliseLongitude(longitude: number): number {
-  return ((((longitude + 180) % 360) + 360) % 360) - 180;
-}
 export const mapEventQuerySchema = z
   .object({
     north: z.coerce.number().min(-90).max(90),
 
     south: z.coerce.number().min(-90).max(90),
 
-    east: z.coerce.number().transform(normaliseLongitude),
+    east: z.coerce.number().min(-180).max(180),
 
-    west: z.coerce.number().transform(normaliseLongitude),
+    west: z.coerce.number().min(-180).max(180),
 
     startDate: z.iso.date().optional(),
 

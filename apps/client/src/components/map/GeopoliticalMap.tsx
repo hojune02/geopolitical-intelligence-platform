@@ -107,6 +107,54 @@ function normaliseLongitude(longitude: number): number {
   return ((((longitude + 180) % 360) + 360) % 360) - 180;
 }
 
+function normaliseMapBounds(
+  north: number,
+  south: number,
+  rawEast: number,
+  rawWest: number,
+): MapBounds {
+  const longitudeSpan =
+    rawEast - rawWest;
+
+  /*
+   * If the viewport covers the entire world,
+   * do not normalise each endpoint separately.
+   *
+   * Doing so would turn:
+   *
+   *   west = -180
+   *   east =  180
+   *
+   * into:
+   *
+   *   west = -180
+   *   east = -180
+   */
+  if (longitudeSpan >= 359.999) {
+    return {
+      north,
+      south,
+      west: -180,
+      east: 180,
+    };
+  }
+
+  return {
+    north,
+    south,
+
+    west:
+      normaliseLongitude(
+        rawWest,
+      ),
+
+    east:
+      normaliseLongitude(
+        rawEast,
+      ),
+  };
+}
+
 function createGeoJson(points: MapEventPoint[]): FeatureCollection<Point, EventFeatureProperties> {
   return {
     type: 'FeatureCollection',
@@ -261,15 +309,14 @@ export function GeopoliticalMap({
     const emitBounds = (): void => {
       const bounds = map.getBounds();
 
-      onBoundsChangeRef.current({
-        north: bounds.getNorth(),
-
-        south: bounds.getSouth(),
-
-        east: normaliseLongitude(bounds.getEast()),
-
-        west: normaliseLongitude(bounds.getWest()),
-      });
+      onBoundsChangeRef.current(
+        normaliseMapBounds(
+          bounds.getNorth(),
+          bounds.getSouth(),
+          bounds.getEast(),
+          bounds.getWest()
+        )
+      );
     };
 
     map.on('load', () => {

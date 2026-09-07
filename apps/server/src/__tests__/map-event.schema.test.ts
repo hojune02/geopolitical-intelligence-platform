@@ -20,18 +20,22 @@ describe('mapEventQuerySchema', () => {
     expect(result.east).toBe(40);
   });
 
-  it('normalizes wrapped longitudes', () => {
-    const result = mapEventQuerySchema.parse({
-      north: '60',
-      south: '30',
-      west: '-261',
-      east: '190',
-    });
+  it(
+  'rejects non-canonical longitudes',
+  () => {
+    const result =
+      mapEventQuerySchema.safeParse({
+        north: '60',
+        south: '-60',
+        west: '-261',
+        east: '190',
+      });
 
-    expect(result.west).toBe(99);
-
-    expect(result.east).toBe(-170);
-  });
+    expect(
+      result.success,
+    ).toBe(false);
+  },
+    );
 
   it('rejects latitude above 90', () => {
     const result = mapEventQuerySchema.safeParse({
@@ -54,4 +58,5 @@ describe('mapEventQuerySchema', () => {
 
     expect(result.success).toBe(false);
   });
+  
 });
