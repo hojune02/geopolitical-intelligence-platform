@@ -670,6 +670,7 @@ server state
       ↓
 HeatmapPage
 ```
+
 ## Automated Testing
 
 The project uses Vitest for automated client and server tests.
@@ -703,4 +704,171 @@ lint
 test
   ↓
 build
+```
+````md
+## 20. Container Architecture
+
+The complete stack can run under Docker Compose.
+
+Current service model:
+
+```text
+Browser
+  │
+  ├── http://localhost:8080
+  │        ↓
+  │      Nginx
+  │        ↓
+  │      React
+  │
+  └── http://localhost:3000
+           ↓
+        Express
+           │
+     ┌─────┴─────┐
+     ↓           ↓
+PostgreSQL     Redis
+
+background:
+  migrate job
+  ingestion worker
+````
+
+### 20.1 Client image
+
+The client uses a multi-stage Docker build:
+
+```text
+Node build stage
+    ↓
+Vite production build
+    ↓
+Nginx runtime image
+```
+
+Nginx serves the static bundle and falls back to `index.html` for application routes so direct refreshes of `/dashboard/heatmap` or `/events/:eventId` are handled by React Router.
+
+### 20.2 Server image
+
+The server also uses a multi-stage build:
+
+```text
+Node build stage
+    ↓
+TypeScript compilation
+    ↓
+production Node runtime
+```
+
+Only production dependencies and compiled output are required at runtime.
+
+### 20.3 Compose networking
+
+Containers communicate through Compose DNS names:
+
+```text
+server / worker → postgres:5432
+server / worker → redis:6379
+```
+
+PostgreSQL and Redis do not require host port publication in the full-stack Compose setup. The browser-facing ports are the client (`8080`) and API (`3000`).
+
+### 20.4 Migrations
+
+A one-shot migration service waits for PostgreSQL health, applies schema migrations, exits successfully, and acts as a dependency for application services.
+
+```text
+PostgreSQL healthy
+        ↓
+migrate
+        ↓
+Exited (0)
+        ↓
+server / worker start
+```
+
+### 20.5 Persistence
+
+PostgreSQL data lives in a named volume, so container recreation is separate from database lifetime. Redis is disposable because it stores reconstructable cache state.
+
+For PostgreSQL 18+, the volume is mounted at the PostgreSQL parent data directory expected by the official image rather than the older PostgreSQL 17 `/var/lib/postgresql/data` layout.
+
+---
+
+## 21. Reliability Model
+
+The system intentionally separates required, optional, and upstream dependencies.
+
+```text
+GDELT unavailable
+→ worker cannot ingest new batches
+→ existing PostgreSQL data remains queryable
+
+Redis unavailable
+→ cache performance degrades
+→ PostgreSQL remains authoritative
+
+PostgreSQL unavailable
+→ canonical event data unavailable
+→ API/worker cannot operate normally
+
+worker unavailable
+→ API remains online
+→ dataset stops advancing until worker recovers
+→ lookback catch-up processes missed batches after restart
+```
+
+This separation prevents an upstream ingestion failure from taking down normal reads.
+
+---
+
+## 22. Current End-to-End Data Flow
+
+```text
+                         GDELT
+                           │
+                 scheduled worker
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+        batch tracking              retention
+              │                         │
+              ▼                         ▼
+         PostgreSQL  ◄──────── delete expired hot rows
+              │
+              │
+          Express API
+              │
+       ┌──────┴───────────────┐
+       │                      │
+       ▼                      ▼
+     Redis               direct DB fallback
+       │                      │
+       └──────────┬───────────┘
+                  ▼
+              HTTP JSON
+                  │
+            client-side Zod
+                  │
+       ┌──────────┼───────────────┐
+       │          │               │
+       ▼          ▼               ▼
+ event loader  map hook       trend hook
+       │          │               │
+       ▼          ▼               ▼
+ detail page   MapLibre        Recharts
+       │
+       ▼
+ source article URL
+```
+
+---
+
+## 23. Future Shared Contracts
+
+A future `packages/shared` workspace may contain API contracts and Zod schemas that are safe to share across browser and server boundaries.
+
+The current client and server schemas remain separate so each trust boundary performs explicit runtime validation. Shared contracts should only be introduced when they reduce duplication without weakening those validation boundaries.
+
+```
 ```
