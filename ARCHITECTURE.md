@@ -636,6 +636,7 @@ MapLibre GeoJSONSource
       ↓
 WebGL rendering
 ```
+
 ## Client Data Hooks
 
 Server-derived client data is accessed through purpose-specific custom
@@ -668,3 +669,38 @@ GET /api/v1/events/map
 server state
       ↓
 HeatmapPage
+```
+## Automated Testing
+
+The project uses Vitest for automated client and server tests.
+
+Testing focuses on high-value architectural boundaries rather than
+pursuing coverage as an isolated metric.
+
+Server tests cover:
+
+- HTTP query validation
+- geographic viewport validation
+- wrapped-longitude normalization
+- invalid date and Goldstein ranges
+- Express health and not-found behavior
+
+Client tests cover:
+
+- frontend network-response schemas
+- Zustand state transitions
+- filter reset behavior
+
+The quality gate is:
+
+```text
+format
+  ↓
+typecheck
+  ↓
+lint
+  ↓
+test
+  ↓
+build
+```
