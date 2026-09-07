@@ -106,15 +106,19 @@ export const useFilterStore = create<FilterStore>()((set) => ({
 
   resetFilters: () => {
     set({
-      ...initialFilterState,
+      activeRegion: 'global',
 
       dateRange: {
-        ...initialFilterState.dateRange,
+        startDate: null,
+        endDate: null,
       },
 
       conflictIntensity: {
-        ...initialFilterState.conflictIntensity,
+        minGoldstein: -10,
+        maxGoldstein: 10,
       },
+
+      rootEventsOnly: false,
     });
   },
 }));
