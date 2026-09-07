@@ -12,7 +12,8 @@
     "db:migrate": "tsx src/scripts/migrate.ts",
     "gdelt:ingest": "tsx src/scripts/ingest-gdelt.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "worker:gdelt": "tsx src/workers/gdelt-ingestion.worker.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

@@ -80,6 +80,12 @@ services:
 
       migrate:
         condition: service_completed_successfully
+    logging:
+      driver: json-file
+
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   client:
     build:
@@ -95,6 +101,57 @@ services:
 
     depends_on:
       - server
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+
+    command:
+      [
+        "node",
+        "apps/server/dist/workers/gdelt-ingestion.worker.js",
+      ]
+
+    environment:
+      NODE_ENV: production
+
+      DATABASE_URL: >-
+        postgresql://geo_intel:geo_intel_dev@postgres:5432/geo_intel
+
+      REDIS_URL: >-
+        redis://redis:6379
+
+      API_CACHE_TTL_SECONDS: 60
+
+      GDELT_MANIFEST_CACHE_TTL_SECONDS: 60
+
+      GDELT_WORKER_POLL_SECONDS: 300
+
+      GDELT_WORKER_LOOKBACK_HOURS: 24
+
+      GDELT_EVENT_RETENTION_DAYS: 90
+
+      GDELT_RETENTION_ENABLED: "false"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      migrate:
+        condition: service_completed_successfully
+
+    restart: unless-stopped
+
+    logging:
+      driver: json-file
+
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   geo_intel_postgres_data:
