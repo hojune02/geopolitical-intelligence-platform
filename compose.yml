@@ -1,0 +1,100 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+
+    environment:
+      POSTGRES_USER: geo_intel
+      POSTGRES_PASSWORD: geo_intel_dev
+      POSTGRES_DB: geo_intel
+
+    volumes:
+      - geo_intel_postgres_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U geo_intel -d geo_intel']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+
+    environment:
+      NODE_ENV: production
+
+      DATABASE_URL: >-
+        postgresql://geo_intel:geo_intel_dev@postgres:5432/geo_intel
+
+      REDIS_URL: >-
+        redis://redis:6379
+
+      CLIENT_ORIGIN: >-
+        http://localhost:8080
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    command: ['node', 'apps/server/dist/scripts/migrate.js']
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+
+    environment:
+      NODE_ENV: production
+
+      PORT: 3000
+
+      DATABASE_URL: >-
+        postgresql://geo_intel:geo_intel_dev@postgres:5432/geo_intel
+
+      REDIS_URL: >-
+        redis://redis:6379
+
+      CLIENT_ORIGIN: >-
+        http://localhost:8080
+
+      API_CACHE_TTL_SECONDS: 60
+
+      GDELT_MANIFEST_CACHE_TTL_SECONDS: 60
+
+    ports:
+      - '3000:3000'
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      migrate:
+        condition: service_completed_successfully
+
+  client:
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile
+
+      args:
+        VITE_API_BASE_URL: >-
+          http://localhost:3000
+
+    ports:
+      - '8080:80'
+
+    depends_on:
+      - server
+
+volumes:
+  geo_intel_postgres_data:
