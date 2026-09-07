@@ -1,45 +1,30 @@
-import {
-    db,
-} from '../db/postgres.js';
+import { db } from '../db/postgres.js';
 
-const DELETE_BATCH_SIZE =
-  10_000;
+const DELETE_BATCH_SIZE = 10_000;
 
-export async function countExpiredEvents(
-  retentionDays: number,
-): Promise<number> {
-  const result =
-    await db.query<{
-      count: string;
-    }>(
-      `
+export async function countExpiredEvents(retentionDays: number): Promise<number> {
+  const result = await db.query<{
+    count: string;
+  }>(
+    `
         SELECT COUNT(*)::text AS count
         FROM gdelt_events
         WHERE added_at <
           NOW() -
           ($1::int * INTERVAL '1 day')
       `,
-      [
-        retentionDays,
-      ],
-    );
-
-  return Number(
-    result.rows[0]?.count ??
-      0,
+    [retentionDays],
   );
+
+  return Number(result.rows[0]?.count ?? 0);
 }
 
-export async function deleteExpiredEvents(
-  retentionDays: number,
-): Promise<number> {
-  let totalDeleted =
-    0;
+export async function deleteExpiredEvents(retentionDays: number): Promise<number> {
+  let totalDeleted = 0;
 
   while (true) {
-    const result =
-      await db.query(
-        `
+    const result = await db.query(
+      `
           WITH doomed AS (
             SELECT id
             FROM gdelt_events
@@ -55,23 +40,14 @@ export async function deleteExpiredEvents(
             doomed.id
           RETURNING events.id
         `,
-        [
-          retentionDays,
-          DELETE_BATCH_SIZE,
-        ],
-      );
+      [retentionDays, DELETE_BATCH_SIZE],
+    );
 
-    const deleted =
-      result.rowCount ??
-      0;
+    const deleted = result.rowCount ?? 0;
 
-    totalDeleted +=
-      deleted;
+    totalDeleted += deleted;
 
-    if (
-      deleted <
-      DELETE_BATCH_SIZE
-    ) {
+    if (deleted < DELETE_BATCH_SIZE) {
       break;
     }
   }

@@ -58,78 +58,40 @@ export async function ingestLatestGdeltBatch() {
   };
 }
 
-export async function ingestGdeltBatch(
-  exportUrl: string,
-): Promise<
-  'ingested' | 'skipped'
-> {
-  const alreadyIngested =
-    await isBatchIngested(
-      exportUrl,
-    );
+export async function ingestGdeltBatch(exportUrl: string): Promise<'ingested' | 'skipped'> {
+  const alreadyIngested = await isBatchIngested(exportUrl);
 
   if (alreadyIngested) {
     return 'skipped';
   }
 
-  const batch =
-    await fetchGdeltExport(
-      exportUrl,
-    );
+  const batch = await fetchGdeltExport(exportUrl);
 
-  await persistGdeltBatch(
-    exportUrl,
-    batch,
-  );
+  await persistGdeltBatch(exportUrl, batch);
 
   await bumpEventCacheVersion();
 
   return 'ingested';
 }
 
-import {
-  createRecentExportUrls,
-} from './gdelt-export.js';
+import { createRecentExportUrls } from './gdelt-export.js';
 
-export async function runGdeltIngestionCycle(
-  lookbackHours: number,
-): Promise<void> {
-  const latestUrl =
-    await fetchLatestGdeltExportUrl();
+export async function runGdeltIngestionCycle(lookbackHours: number): Promise<void> {
+  const latestUrl = await fetchLatestGdeltExportUrl();
 
-  const candidates =
-    createRecentExportUrls(
-      latestUrl,
-      lookbackHours,
-    );
+  const candidates = createRecentExportUrls(latestUrl, lookbackHours);
 
-  for (
-    const exportUrl
-    of candidates
-  ) {
-    if (
-      await isBatchIngested(
-        exportUrl,
-      )
-    ) {
+  for (const exportUrl of candidates) {
+    if (await isBatchIngested(exportUrl)) {
       continue;
     }
 
     try {
-      await ingestGdeltBatch(
-        exportUrl,
-      );
+      await ingestGdeltBatch(exportUrl);
 
-      console.info(
-        `[gdelt-worker] ingested ${exportUrl}`,
-      );
-    } catch (
-      caught: unknown
-    ) {
-      console.warn(
-        `[gdelt-worker] unable to ingest ${exportUrl}`,
-        caught,
-      );
+      console.info(`[gdelt-worker] ingested ${exportUrl}`);
+    } catch (caught: unknown) {
+      console.warn(`[gdelt-worker] unable to ingest ${exportUrl}`, caught);
     }
   }
 }

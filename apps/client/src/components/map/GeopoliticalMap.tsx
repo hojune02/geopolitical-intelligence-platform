@@ -113,8 +113,7 @@ function normaliseMapBounds(
   rawEast: number,
   rawWest: number,
 ): MapBounds {
-  const longitudeSpan =
-    rawEast - rawWest;
+  const longitudeSpan = rawEast - rawWest;
 
   /*
    * If the viewport covers the entire world,
@@ -143,15 +142,9 @@ function normaliseMapBounds(
     north,
     south,
 
-    west:
-      normaliseLongitude(
-        rawWest,
-      ),
+    west: normaliseLongitude(rawWest),
 
-    east:
-      normaliseLongitude(
-        rawEast,
-      ),
+    east: normaliseLongitude(rawEast),
   };
 }
 
@@ -314,8 +307,8 @@ export function GeopoliticalMap({
           bounds.getNorth(),
           bounds.getSouth(),
           bounds.getEast(),
-          bounds.getWest()
-        )
+          bounds.getWest(),
+        ),
       );
     };
 

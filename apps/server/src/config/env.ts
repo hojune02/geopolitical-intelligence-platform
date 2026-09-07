@@ -18,17 +18,14 @@ const envSchema = z.object({
 
   GDELT_MANIFEST_CACHE_TTL_SECONDS: z.coerce.number().int().min(1).max(900).default(60),
 
-  GDELT_WORKER_POLL_SECONDS:
-  z.coerce.number().int().positive().default(300),
+  GDELT_WORKER_POLL_SECONDS: z.coerce.number().int().positive().default(300),
 
-GDELT_WORKER_LOOKBACK_HOURS:
-  z.coerce.number().int().positive().default(24),
+  GDELT_WORKER_LOOKBACK_HOURS: z.coerce.number().int().positive().default(24),
 
-GDELT_EVENT_RETENTION_DAYS:
-  z.coerce.number().int().positive().default(90),
+  GDELT_EVENT_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
 
-GDELT_RETENTION_ENABLED:
-  z.string()
+  GDELT_RETENTION_ENABLED: z
+    .string()
     .default('false')
     .transform((value) => value === 'true'),
 });
