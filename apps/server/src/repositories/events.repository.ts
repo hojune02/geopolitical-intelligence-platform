@@ -396,6 +396,62 @@ export async function findEvents(query: EventQuery): Promise<EventPage> {
   });
 }
 
+export async function findEventById(eventId: string): Promise<GdeltEvent | null> {
+  const result = await db.query<EventRow>(
+    `
+      SELECT
+        id,
+
+        event_date,
+        added_at,
+
+        actor1_code,
+        actor1_name,
+        actor1_country_code,
+
+        actor2_code,
+        actor2_name,
+        actor2_country_code,
+
+        event_code,
+        event_base_code,
+        event_root_code,
+
+        quad_class,
+        goldstein_scale,
+
+        is_root_event,
+
+        num_mentions,
+        num_sources,
+        num_articles,
+        avg_tone,
+
+        location_name,
+        location_country_code,
+        latitude,
+        longitude,
+
+        source_url
+
+      FROM gdelt_events
+
+      WHERE id = $1
+
+      LIMIT 1
+    `,
+    [eventId],
+  );
+
+  const row = result.rows[0];
+
+  if (row === undefined) {
+    return null;
+  }
+
+  return mapEventRow(row);
+}
+
 function buildTrendWhere(query: TrendQuery): {
   sql: string;
   values: SqlValue[];

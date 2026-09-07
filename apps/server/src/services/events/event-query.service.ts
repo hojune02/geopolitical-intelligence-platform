@@ -14,6 +14,8 @@ import {
 
 import { findMapEvents } from '../../repositories/map-events.repository.js';
 
+import type { GdeltEvent } from '../../schemas/gdelt-event.schema.js';
+
 import {
   eventPageSchema,
   trendsPayloadSchema,
@@ -22,6 +24,12 @@ import {
   type TrendQuery,
   type TrendsPayload,
 } from '../../schemas/event-query.schema.js';
+
+import { findEventById } from '../../repositories/events.repository.js';
+
+export async function getEventById(eventId: string): Promise<GdeltEvent | null> {
+  return findEventById(eventId);
+}
 
 function createCacheKey(namespace: string, version: string, query: unknown): string {
   const serialized = JSON.stringify(query);

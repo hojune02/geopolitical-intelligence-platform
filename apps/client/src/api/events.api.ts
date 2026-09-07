@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-import { eventPageResponseSchema, type EventPageResponse } from '../schemas/event-api.schema';
+import {
+  eventDetailResponseSchema,
+  eventPageResponseSchema,
+  type EventDetailResponse,
+  type EventPageResponse,
+} from '../schemas/event-api.schema';
 
 const rawApiBaseUrl: unknown = import.meta.env.VITE_API_BASE_URL;
 
@@ -104,4 +109,19 @@ export async function fetchEventPage(
   appendQuery(url.searchParams, 'west', query.west);
 
   return fetchAndParse(url, eventPageResponseSchema, signal);
+}
+
+export async function fetchEventById(
+  eventId: string,
+  signal?: AbortSignal,
+): Promise<EventDetailResponse> {
+  const rawApiBaseUrl: unknown = import.meta.env.VITE_API_BASE_URL;
+
+  if (typeof rawApiBaseUrl !== 'string') {
+    throw new Error('VITE_API_BASE_URL is not configured.');
+  }
+
+  const url = new URL(`/api/v1/events/${encodeURIComponent(eventId)}`, rawApiBaseUrl);
+
+  return fetchAndParse(url, eventDetailResponseSchema, signal);
 }

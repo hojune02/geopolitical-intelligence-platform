@@ -10,6 +10,8 @@ import { mapEventQuerySchema } from '../schemas/map-event.schema.js';
 
 import { getMapEventPage } from '../services/events/event-query.service.js';
 
+import { getEventById } from '../services/events/event-query.service.js';
+
 export const eventsRouter = Router();
 
 eventsRouter.get('/', async (request, response) => {
@@ -38,4 +40,28 @@ eventsRouter.get('/map', async (request, response) => {
       hit: result.cacheHit,
     },
   });
+});
+
+eventsRouter.get('/:eventId', async (request, response, next) => {
+  try {
+    const eventId = request.params.eventId;
+
+    const event = await getEventById(eventId);
+
+    if (event === null) {
+      response.status(404).json({
+        error: {
+          message: 'Event not found.',
+        },
+      });
+
+      return;
+    }
+
+    response.json({
+      data: event,
+    });
+  } catch (error) {
+    next(error);
+  }
 });

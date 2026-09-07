@@ -85,3 +85,9 @@ export const eventPageResponseSchema = z.object({
 export type Event = z.infer<typeof eventSchema>;
 
 export type EventPageResponse = z.infer<typeof eventPageResponseSchema>;
+
+export const eventDetailResponseSchema = z.object({
+  data: eventSchema,
+});
+
+export type EventDetailResponse = z.infer<typeof eventDetailResponseSchema>;

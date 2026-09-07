@@ -444,6 +444,28 @@ button {
   border-radius: 0.5rem;
 }
 
+.event-source {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.event-source-url {
+  max-width: 100%;
+
+  overflow-wrap: anywhere;
+
+  font-family: monospace;
+
+  font-size: 0.85rem;
+
+  opacity: 0.75;
+}
+
+.event-source a {
+  width: fit-content;
+  font-weight: 600;
+}
+
 @media (max-width: 1000px) {
   .analytics-grid {
     grid-template-columns: 1fr;
