@@ -10,7 +10,8 @@
     "format:check": "prettier . --check",
     "infra:up": "docker compose -f compose.dev.yml up -d",
     "infra:down": "docker compose -f compose.dev.yml down",
-    "infra:logs": "docker compose -f compose.dev.yml logs -f"
+    "infra:logs": "docker compose -f compose.dev.yml logs -f",
+    "test": "npm run test --workspaces --if-present"
   },
   "keywords": [],
   "author": "Hojune Kim",
