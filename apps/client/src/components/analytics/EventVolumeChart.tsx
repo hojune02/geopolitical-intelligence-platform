@@ -37,19 +37,33 @@ export function EventVolumeChart({ data }: EventVolumeChartProps) {
               left: 0,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid stroke="#203128" strokeDasharray="3 5" />
 
-            <XAxis dataKey="bucket" minTickGap={24} />
+            <XAxis axisLine={{ stroke: '#385544' }} dataKey="bucket" minTickGap={24} />
 
-            <YAxis allowDecimals={false} />
+            <YAxis allowDecimals={false} axisLine={{ stroke: '#385544' }} />
 
             <Tooltip />
 
             <Legend />
 
-            <Line dataKey="eventCount" dot={false} name="Events" type="monotone" />
+            <Line
+              dataKey="eventCount"
+              dot={false}
+              name="Events"
+              stroke="#b7f34a"
+              strokeWidth={2}
+              type="monotone"
+            />
 
-            <Line dataKey="conflictEvents" dot={false} name="Conflict Events" type="monotone" />
+            <Line
+              dataKey="conflictEvents"
+              dot={false}
+              name="Conflict Events"
+              stroke="#f26b5e"
+              strokeWidth={1.5}
+              type="monotone"
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>

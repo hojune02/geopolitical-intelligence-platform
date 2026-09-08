@@ -72,14 +72,10 @@ export function HeatmapPage() {
 
         <span>Cache: {cacheHit ? 'hit' : 'miss'}</span>
 
-        {loading ? <span>Updating…</span> : null}
+        <span aria-hidden={!loading} className={loading ? undefined : 'is-invisible'}>
+          Updating…
+        </span>
       </div>
-
-      {error !== null ? <div role="alert">{error}</div> : null}
-
-      {truncated ? (
-        <div role="status">Showing the first 5,000 events. Zoom in for a more precise result.</div>
-      ) : null}
 
       <div className="map-shell">
         <GeopoliticalMap
@@ -89,6 +85,20 @@ export function HeatmapPage() {
           points={points}
           region={activeRegion}
         />
+
+        <div aria-live="polite" className="map-overlay-messages">
+          {error !== null ? (
+            <div className="map-overlay-message map-overlay-error" role="alert">
+              {error}
+            </div>
+          ) : null}
+
+          {truncated ? (
+            <div className="map-overlay-message map-overlay-limit" role="status">
+              Showing the first 5,000 events. Zoom in for a more precise result.
+            </div>
+          ) : null}
+        </div>
       </div>
     </section>
   );

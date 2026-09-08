@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { GeoJSONSource, Map as MapLibreMap, NavigationControl, setWorkerUrl } from 'maplibre-gl';
 
@@ -8,11 +8,11 @@ import mapLibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 
 setWorkerUrl(mapLibreWorkerUrl);
 
-import type { FeatureCollection, Point } from 'geojson';
+import type { Feature, FeatureCollection, Point } from 'geojson';
 
 import type { MapBounds } from '../../api/map.api';
 
-import type { MapEventPoint } from '../../schemas/map-event.schema';
+import { mapEventPointSchema, type MapEventPoint } from '../../schemas/map-event.schema';
 
 import type { RegionId } from '../../stores/useFilterStore';
 
@@ -46,6 +46,22 @@ interface EventFeatureProperties {
   locationName: string | null;
 }
 
+interface ClusterSelection {
+  sourceData: FeatureCollection<Point, EventFeatureProperties>;
+
+  clusterId: number;
+
+  total: number;
+
+  offset: number;
+
+  events: MapEventPoint[];
+
+  loading: boolean;
+
+  error: string | null;
+}
+
 const CLUSTER_SOURCE = 'events-clustered';
 
 const RAW_SOURCE = 'events-raw';
@@ -57,6 +73,10 @@ const CLUSTER_COUNT_LAYER = 'event-cluster-count';
 const POINT_LAYER = 'event-points';
 
 const HEATMAP_LAYER = 'event-heatmap';
+
+const MAP_MAX_ZOOM = 16;
+
+const CLUSTER_PAGE_SIZE = 25;
 
 const EMPTY_COLLECTION: FeatureCollection<Point, EventFeatureProperties> = {
   type: 'FeatureCollection',
@@ -180,6 +200,24 @@ function createGeoJson(points: MapEventPoint[]): FeatureCollection<Point, EventF
   };
 }
 
+function parseClusterLeaf(feature: Feature): MapEventPoint | null {
+  if (feature.geometry.type !== 'Point') {
+    return null;
+  }
+
+  const [longitude, latitude] = feature.geometry.coordinates;
+
+  const result = mapEventPointSchema.safeParse({
+    ...feature.properties,
+
+    longitude,
+
+    latitude,
+  });
+
+  return result.success ? result.data : null;
+}
+
 function setLayerVisibility(
   map: MapLibreMap,
 
@@ -237,6 +275,8 @@ export function GeopoliticalMap({
   onBoundsChange,
   onEventSelect,
 }: GeopoliticalMapProps) {
+  const [clusterSelection, setClusterSelection] = useState<ClusterSelection | null>(null);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -254,6 +294,83 @@ export function GeopoliticalMap({
   );
 
   const geoJsonRef = useRef(geoJson);
+
+  const loadClusterPage = useCallback((clusterId: number, total: number, offset: number) => {
+    const map = mapRef.current;
+
+    const sourceData = geoJsonRef.current;
+
+    const source = map?.getSource(CLUSTER_SOURCE);
+
+    if (!(source instanceof GeoJSONSource)) {
+      return;
+    }
+
+    setClusterSelection((current) => ({
+      sourceData,
+
+      clusterId,
+
+      total,
+
+      offset,
+
+      events:
+        current?.clusterId === clusterId && current.sourceData === sourceData ? current.events : [],
+
+      loading: true,
+
+      error: null,
+    }));
+
+    void source
+      .getClusterLeaves(clusterId, CLUSTER_PAGE_SIZE, offset)
+      .then((features) => {
+        if (mapRef.current !== map) {
+          return;
+        }
+
+        const events = features
+          .map((feature) => parseClusterLeaf(feature))
+          .filter((event): event is MapEventPoint => event !== null);
+
+        setClusterSelection((current) =>
+          current?.clusterId === clusterId && current.sourceData === sourceData
+            ? {
+                sourceData,
+
+                clusterId,
+
+                total,
+
+                offset,
+
+                events,
+
+                loading: false,
+
+                error: null,
+              }
+            : current,
+        );
+      })
+      .catch((caught: unknown) => {
+        const message =
+          caught instanceof Error ? caught.message : 'Unable to load the events in this cluster.';
+
+        setClusterSelection((current) =>
+          current?.clusterId === clusterId && current.sourceData === sourceData
+            ? {
+                ...current,
+
+                loading: false,
+
+                error: message,
+              }
+            : current,
+        );
+      });
+  }, []);
 
   useEffect(() => {
     onBoundsChangeRef.current = onBoundsChange;
@@ -284,7 +401,7 @@ export function GeopoliticalMap({
        * Replace with a production
        * tile/style provider later.
        */
-      style: 'https://demotiles.maplibre.org/style.json',
+      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
 
       center: initialCamera.center,
 
@@ -292,7 +409,7 @@ export function GeopoliticalMap({
 
       minZoom: 1,
 
-      maxZoom: 16,
+      maxZoom: MAP_MAX_ZOOM,
     });
 
     mapRef.current = map;
@@ -320,7 +437,12 @@ export function GeopoliticalMap({
 
         cluster: true,
 
-        clusterMaxZoom: 12,
+        /*
+         * GDELT commonly assigns many events the same city-level coordinates.
+         * Keep those points clustered at the map's maximum zoom; otherwise the
+         * coincident point markers overlap and incorrectly look like one event.
+         */
+        clusterMaxZoom: MAP_MAX_ZOOM,
 
         clusterRadius: 55,
       });
@@ -340,18 +462,26 @@ export function GeopoliticalMap({
 
             ['get', 'point_count'],
 
-            '#2563eb',
+            '#55d9d0',
 
             50,
-            '#7c3aed',
+            '#b7f34a',
 
             250,
-            '#dc2626',
+            '#f26b5e',
           ],
 
           'circle-radius': ['step', ['get', 'point_count'], 16, 50, 22, 250, 30, 1000, 38],
 
-          'circle-opacity': 0.85,
+          'circle-opacity': 0.82,
+
+          'circle-stroke-color': '#e7eee9',
+
+          'circle-stroke-opacity': 0.6,
+
+          'circle-stroke-width': 1,
+
+          'circle-blur': 0.05,
         },
       });
 
@@ -394,18 +524,18 @@ export function GeopoliticalMap({
             ['get', 'goldsteinScale'],
 
             -10,
-            '#dc2626',
+            '#f26b5e',
 
             0,
-            '#f59e0b',
+            '#e8b95b',
 
             10,
-            '#16a34a',
+            '#b7f34a',
           ],
 
           'circle-stroke-width': 1,
 
-          'circle-stroke-color': '#ffffff',
+          'circle-stroke-color': '#e7eee9',
         },
       });
 
@@ -445,6 +575,24 @@ export function GeopoliticalMap({
 
           'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 4, 8, 22],
 
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0,
+            'rgba(5, 8, 6, 0)',
+            0.2,
+            '#163b36',
+            0.4,
+            '#55d9d0',
+            0.65,
+            '#b7f34a',
+            0.82,
+            '#e8b95b',
+            1,
+            '#f26b5e',
+          ],
+
           'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 0.9, 12, 0],
         },
       });
@@ -472,17 +620,15 @@ export function GeopoliticalMap({
 
         const properties: unknown = feature.properties;
 
-        if (
-          typeof properties !== 'object' ||
-          properties === null ||
-          !('cluster_id' in properties)
-        ) {
+        if (typeof properties !== 'object' || properties === null) {
           return;
         }
 
-        const clusterId = properties.cluster_id;
+        const clusterId = 'cluster_id' in properties ? properties.cluster_id : null;
 
-        if (typeof clusterId !== 'number') {
+        const pointCount = 'point_count' in properties ? properties.point_count : null;
+
+        if (typeof clusterId !== 'number' || typeof pointCount !== 'number') {
           return;
         }
 
@@ -498,15 +644,23 @@ export function GeopoliticalMap({
 
         const latitude = coordinates[1];
 
-        if (!longitude || !latitude) {
+        if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) {
           return;
         }
 
         void source.getClusterExpansionZoom(clusterId).then((zoom) => {
-          map.easeTo({
-            center: [longitude, latitude],
-            zoom,
-          });
+          if (zoom <= MAP_MAX_ZOOM || map.getZoom() < MAP_MAX_ZOOM - 0.1) {
+            setClusterSelection(null);
+
+            map.easeTo({
+              center: [longitude, latitude],
+              zoom: Math.min(zoom, MAP_MAX_ZOOM),
+            });
+
+            return;
+          }
+
+          loadClusterPage(clusterId, pointCount, 0);
         });
       });
 
@@ -549,12 +703,16 @@ export function GeopoliticalMap({
 
     map.on('moveend', emitBounds);
 
+    map.on('movestart', () => {
+      setClusterSelection(null);
+    });
+
     return () => {
       map.remove();
 
       mapRef.current = null;
     };
-  }, []);
+  }, [loadClusterPage]);
 
   useEffect(() => {
     modeRef.current = mode;
@@ -598,5 +756,110 @@ export function GeopoliticalMap({
     });
   }, [region]);
 
-  return <div className="map-container" ref={containerRef} />;
+  const visibleClusterSelection =
+    mode === 'markers' && clusterSelection?.sourceData === geoJson ? clusterSelection : null;
+
+  return (
+    <>
+      <div className="map-container" ref={containerRef} />
+
+      {visibleClusterSelection === null ? null : (
+        <aside aria-label="Events in selected cluster" className="cluster-drilldown">
+          <header className="cluster-drilldown-header">
+            <div>
+              <span>Cluster dossier</span>
+
+              <strong>{visibleClusterSelection.total.toLocaleString()} events</strong>
+            </div>
+
+            <button
+              aria-label="Close cluster events"
+              onClick={() => {
+                setClusterSelection(null);
+              }}
+              type="button"
+            >
+              ×
+            </button>
+          </header>
+
+          <div className="cluster-event-list">
+            {visibleClusterSelection.error === null ? null : (
+              <p className="cluster-event-error">{visibleClusterSelection.error}</p>
+            )}
+
+            {visibleClusterSelection.loading && visibleClusterSelection.events.length === 0 ? (
+              <p className="cluster-event-loading">Decrypting event records…</p>
+            ) : null}
+
+            {visibleClusterSelection.events.map((event) => (
+              <button
+                className="cluster-event"
+                key={event.id}
+                onClick={() => {
+                  onEventSelectRef.current(event.id);
+                }}
+                type="button"
+              >
+                <span className="cluster-event-actors">
+                  {event.actor1Name ?? 'Unknown actor'}
+                  {' → '}
+                  {event.actor2Name ?? 'Unknown actor'}
+                </span>
+
+                <span className="cluster-event-meta">
+                  {event.eventDate} · {event.locationName ?? 'Unknown location'} · G{' '}
+                  {event.goldsteinScale}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <footer className="cluster-drilldown-footer">
+            <span>
+              {visibleClusterSelection.offset + 1}–
+              {Math.min(
+                visibleClusterSelection.offset + CLUSTER_PAGE_SIZE,
+                visibleClusterSelection.total,
+              )}{' '}
+              of {visibleClusterSelection.total}
+            </span>
+
+            <div>
+              <button
+                disabled={visibleClusterSelection.offset === 0 || visibleClusterSelection.loading}
+                onClick={() => {
+                  loadClusterPage(
+                    visibleClusterSelection.clusterId,
+                    visibleClusterSelection.total,
+                    Math.max(0, visibleClusterSelection.offset - CLUSTER_PAGE_SIZE),
+                  );
+                }}
+                type="button"
+              >
+                Prev
+              </button>
+
+              <button
+                disabled={
+                  visibleClusterSelection.offset + CLUSTER_PAGE_SIZE >=
+                    visibleClusterSelection.total || visibleClusterSelection.loading
+                }
+                onClick={() => {
+                  loadClusterPage(
+                    visibleClusterSelection.clusterId,
+                    visibleClusterSelection.total,
+                    visibleClusterSelection.offset + CLUSTER_PAGE_SIZE,
+                  );
+                }}
+                type="button"
+              >
+                Next
+              </button>
+            </div>
+          </footer>
+        </aside>
+      )}
+    </>
+  );
 }

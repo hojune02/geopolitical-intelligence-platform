@@ -37,13 +37,18 @@ export function ImpactTrendChart({ data }: ImpactTrendChartProps) {
               left: 0,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid stroke="#203128" strokeDasharray="3 5" />
 
-            <XAxis dataKey="bucket" minTickGap={24} />
+            <XAxis axisLine={{ stroke: '#385544' }} dataKey="bucket" minTickGap={24} />
 
-            <YAxis domain={[-10, 10]} yAxisId="goldstein" />
+            <YAxis axisLine={{ stroke: '#385544' }} domain={[-10, 10]} yAxisId="goldstein" />
 
-            <YAxis domain={[-100, 100]} orientation="right" yAxisId="tone" />
+            <YAxis
+              axisLine={{ stroke: '#385544' }}
+              domain={[-100, 100]}
+              orientation="right"
+              yAxisId="tone"
+            />
 
             <Tooltip />
 
@@ -54,6 +59,8 @@ export function ImpactTrendChart({ data }: ImpactTrendChartProps) {
               dataKey="averageGoldstein"
               dot={false}
               name="Average Goldstein"
+              stroke="#b7f34a"
+              strokeWidth={2}
               type="monotone"
               yAxisId="goldstein"
             />
@@ -63,6 +70,8 @@ export function ImpactTrendChart({ data }: ImpactTrendChartProps) {
               dataKey="averageTone"
               dot={false}
               name="Average Tone"
+              stroke="#55d9d0"
+              strokeWidth={1.5}
               type="monotone"
               yAxisId="tone"
             />

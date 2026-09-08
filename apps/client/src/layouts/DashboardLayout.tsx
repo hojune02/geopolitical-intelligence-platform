@@ -12,7 +12,12 @@ export function DashboardLayout() {
   return (
     <div className="dashboard-layout">
       <aside className="filter-sidebar">
-        <button onClick={toggleFilterPanel} type="button">
+        <button
+          aria-expanded={filterPanelOpen}
+          className="filter-toggle"
+          onClick={toggleFilterPanel}
+          type="button"
+        >
           {filterPanelOpen ? 'Hide filters' : 'Show filters'}
         </button>
 
