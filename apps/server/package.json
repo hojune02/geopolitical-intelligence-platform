@@ -13,7 +13,8 @@
     "gdelt:ingest": "tsx src/scripts/ingest-gdelt.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "worker:gdelt": "tsx src/workers/gdelt-ingestion.worker.ts"
+    "worker:gdelt": "tsx src/workers/gdelt-ingestion.worker.ts",
+    "retention": "tsx src/scripts/retention.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
