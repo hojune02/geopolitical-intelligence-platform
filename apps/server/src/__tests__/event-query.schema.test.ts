@@ -42,4 +42,34 @@ describe('eventQuerySchema', () => {
 
     expect(result.success).toBe(false);
   });
+
+  it('accepts trend Goldstein and root-event filters', () => {
+    const result = eventQuerySchema.parse({
+      bucket: 'day',
+
+      minGoldstein: '-5',
+
+      maxGoldstein: '2',
+
+      isRootEvent: 'true',
+    });
+
+    expect(result.minGoldstein).toBe(-5);
+
+    expect(result.maxGoldstein).toBe(2);
+
+    expect(result.isRootEvent).toBe(true);
+  });
+
+  it('rejects an invalid trend Goldstein range', () => {
+    const result = eventQuerySchema.safeParse({
+      bucket: 'day',
+
+      minGoldstein: '5',
+
+      maxGoldstein: '-5',
+    });
+
+    expect(result.success).toBe(false);
+  });
 });
