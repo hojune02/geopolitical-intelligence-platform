@@ -1,43 +1,55 @@
 import { useEffect, useState } from 'react';
 
-import { fetchTrends } from '../api/analytics.api';
+import { fetchEventPage } from '../api/events.api';
 
-import type { TrendBucket, TrendPoint } from '../schemas/analytics.schema';
+import type { Event } from '../schemas/event-api.schema';
 
 import { useFilterStore } from '../stores/useFilterStore';
 
-interface TrendDataState {
-  data: TrendPoint[];
+interface EventDataState {
+  data: Event[];
 
-  error: string | null;
+  total: number;
+
+  totalPages: number;
 
   cacheHit: boolean;
+
+  error: string | null;
 
   completedQueryKey: string | null;
 }
 
-export interface TrendDataResult {
-  data: TrendPoint[];
+export interface EventDataResult {
+  data: Event[];
+
+  total: number;
+
+  totalPages: number;
 
   loading: boolean;
 
-  error: string | null;
-
   cacheHit: boolean;
+
+  error: string | null;
 }
 
-const initialState: TrendDataState = {
+const initialState: EventDataState = {
   data: [],
 
-  error: null,
+  total: 0,
+
+  totalPages: 0,
 
   cacheHit: false,
+
+  error: null,
 
   completedQueryKey: null,
 };
 
-export function useTrendData(bucket: TrendBucket): TrendDataResult {
-  const [state, setState] = useState<TrendDataState>(initialState);
+export function useEventData(): EventDataResult {
+  const [state, setState] = useState<EventDataState>(initialState);
 
   const startDate = useFilterStore((store) => store.dateRange.startDate);
 
@@ -48,21 +60,31 @@ export function useTrendData(bucket: TrendBucket): TrendDataResult {
   const maxGoldstein = useFilterStore((store) => store.conflictIntensity.maxGoldstein);
 
   const rootEventsOnly = useFilterStore((store) => store.rootEventsOnly);
+
   const queryKey = JSON.stringify({
-    bucket,
+    page: 1,
+
+    limit: 25,
+
     startDate,
+
     endDate,
+
     minGoldstein,
+
     maxGoldstein,
+
     rootEventsOnly,
   });
 
   useEffect(() => {
     const controller = new AbortController();
 
-    void fetchTrends(
+    void fetchEventPage(
       {
-        bucket,
+        page: 1,
+
+        limit: 25,
 
         startDate: startDate ?? undefined,
 
@@ -85,9 +107,13 @@ export function useTrendData(bucket: TrendBucket): TrendDataResult {
         setState({
           data: response.data,
 
-          error: null,
+          total: response.meta.total,
+
+          totalPages: response.meta.totalPages,
 
           cacheHit: response.cache.hit,
+
+          error: null,
 
           completedQueryKey: queryKey,
         });
@@ -97,7 +123,7 @@ export function useTrendData(bucket: TrendBucket): TrendDataResult {
           return;
         }
 
-        const message = caught instanceof Error ? caught.message : 'Unable to load analytics data.';
+        const message = caught instanceof Error ? caught.message : 'Unable to load events.';
 
         setState((previous) => ({
           ...previous,
@@ -111,7 +137,7 @@ export function useTrendData(bucket: TrendBucket): TrendDataResult {
     return () => {
       controller.abort();
     };
-  }, [bucket, startDate, endDate, minGoldstein, maxGoldstein, rootEventsOnly, queryKey]);
+  }, [startDate, endDate, minGoldstein, maxGoldstein, rootEventsOnly, queryKey]);
 
   const loading = state.completedQueryKey !== queryKey;
 
@@ -120,10 +146,14 @@ export function useTrendData(bucket: TrendBucket): TrendDataResult {
   return {
     data: state.data,
 
+    total: state.total,
+
+    totalPages: state.totalPages,
+
     loading,
 
-    error: currentResult ? state.error : null,
-
     cacheHit: currentResult ? state.cacheHit : false,
+
+    error: currentResult ? state.error : null,
   };
 }

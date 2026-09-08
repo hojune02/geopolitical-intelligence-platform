@@ -115,6 +115,15 @@ export const trendQuerySchema = z
     quadClass: z.coerce.number().int().min(1).max(4).optional(),
 
     bucket: z.enum(['day', 'week']).default('day'),
+
+    minGoldstein: z.coerce.number().min(-10).max(10).optional(),
+
+    maxGoldstein: z.coerce.number().min(-10).max(10).optional(),
+
+    isRootEvent: z
+      .enum(['true', 'false'])
+      .transform((value) => value === 'true')
+      .optional(),
   })
   .superRefine((query, context) => {
     if (
@@ -126,6 +135,18 @@ export const trendQuerySchema = z
         code: 'custom',
         path: ['startDate'],
         message: 'startDate must be before or equal to endDate',
+      });
+    }
+
+    if (
+      query.minGoldstein !== undefined &&
+      query.maxGoldstein !== undefined &&
+      query.minGoldstein > query.maxGoldstein
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'minGoldstein must be less than or equal to maxGoldstein',
+        path: ['maxGoldstein'],
       });
     }
   });

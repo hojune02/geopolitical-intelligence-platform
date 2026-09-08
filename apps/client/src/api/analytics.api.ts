@@ -16,6 +16,12 @@ export interface TrendQuery {
   countryCode?: string;
 
   quadClass?: number;
+
+  minGoldstein?: number;
+
+  maxGoldstein?: number;
+
+  isRootEvent?: boolean;
 }
 
 export async function fetchTrends(query: TrendQuery, signal?: AbortSignal): Promise<TrendResponse> {
@@ -36,6 +42,12 @@ export async function fetchTrends(query: TrendQuery, signal?: AbortSignal): Prom
   appendQuery(url.searchParams, 'countryCode', query.countryCode);
 
   appendQuery(url.searchParams, 'quadClass', query.quadClass);
+
+  appendQuery(url.searchParams, 'minGoldstein', query.minGoldstein);
+
+  appendQuery(url.searchParams, 'maxGoldstein', query.maxGoldstein);
+
+  appendQuery(url.searchParams, 'isRootEvent', query.isRootEvent);
 
   return fetchAndParse(url, trendResponseSchema, signal);
 }

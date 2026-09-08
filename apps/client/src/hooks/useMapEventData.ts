@@ -93,7 +93,7 @@ export function useMapEventData(bounds: MapBounds | null): MapEventDataResult {
 
         maxGoldstein,
 
-        isRootEvent: rootEventsOnly,
+        isRootEvent: rootEventsOnly ? true : undefined,
 
         limit: 5_000,
       },

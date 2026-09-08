@@ -1,15 +1,12 @@
-import { Link, useLoaderData } from 'react-router';
-
-import type { DashboardLoaderData } from '../router/loaders/dashboard.loader';
-
-import { useUIStore } from '../stores/useUIStore';
-
-import { useFilterStore } from '../stores/useFilterStore';
+import { Link } from 'react-router';
 
 import { AnalyticsPanel } from '../components/analytics/AnalyticsPanel';
+import { useEventData } from '../hooks/useEventData';
+import { useFilterStore } from '../stores/useFilterStore';
+import { useUIStore } from '../stores/useUIStore';
 
 export function DashboardPage() {
-  const { initialEvents } = useLoaderData<DashboardLoaderData>();
+  const { data: events, total, loading, error, cacheHit } = useEventData();
 
   const activePanel = useUIStore((state) => state.activePanel);
 
@@ -30,7 +27,7 @@ export function DashboardPage() {
 
         <div className="active-filters">
           <span>
-            Region: <strong>{activeRegion}</strong>
+            Map region: <strong>{activeRegion}</strong>
           </span>
 
           <span>
@@ -44,9 +41,9 @@ export function DashboardPage() {
         </div>
 
         <div className="stat">
-          <span>Stored events</span>
+          <span>Matching events</span>
 
-          <strong>{initialEvents.meta.total}</strong>
+          <strong>{total}</strong>
         </div>
       </header>
 
@@ -54,7 +51,7 @@ export function DashboardPage() {
         <div className="panel-header">
           <h2>Latest Events</h2>
 
-          <span>API cache: {initialEvents.cache.hit ? 'hit' : 'miss'}</span>
+          <span>API cache: {cacheHit ? 'hit' : 'miss'}</span>
         </div>
 
         <div className="panel-tabs">
@@ -78,26 +75,37 @@ export function DashboardPage() {
             Analytics
           </button>
         </div>
+
         {activePanel === 'events' ? (
-          <div className="event-list">
-            {initialEvents.data.map((event) => (
-              <article className="event-card" key={event.id}>
-                <div>
-                  <strong>{event.actors.source.name ?? 'Unknown actor'}</strong>
+          <>
+            {loading ? <p>Updating events…</p> : null}
 
-                  {' → '}
+            {error !== null ? <p role="alert">{error}</p> : null}
 
-                  <strong>{event.actors.target.name ?? 'Unknown actor'}</strong>
-                </div>
+            {!loading && error === null && events.length === 0 ? (
+              <p>No events match the current filters.</p>
+            ) : null}
 
-                <p>Goldstein: {event.action.goldsteinScale}</p>
+            <div className="event-list">
+              {events.map((event) => (
+                <article className="event-card" key={event.id}>
+                  <div>
+                    <strong>{event.actors.source.name ?? 'Unknown actor'}</strong>
 
-                <p>{event.location?.name ?? 'Unknown location'}</p>
+                    {' → '}
 
-                <Link to={`/events/${event.id}`}>View event</Link>
-              </article>
-            ))}
-          </div>
+                    <strong>{event.actors.target.name ?? 'Unknown actor'}</strong>
+                  </div>
+
+                  <p>Goldstein: {event.action.goldsteinScale}</p>
+
+                  <p>{event.location?.name ?? 'Unknown location'}</p>
+
+                  <Link to={`/events/${event.id}`}>View event</Link>
+                </article>
+              ))}
+            </div>
+          </>
         ) : (
           <AnalyticsPanel />
         )}

@@ -14,8 +14,6 @@ import { NotFoundPage } from '../pages/NotFoundPage';
 
 import { RouteErrorPage } from '../pages/RouteErrorPage';
 
-import { dashboardLoader } from './loaders/dashboard.loader';
-
 import { eventDetailLoader } from './loaders/event-detail.loader';
 
 export const router = createBrowserRouter([
@@ -43,8 +41,6 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-
-            loader: dashboardLoader,
 
             Component: DashboardPage,
           },

@@ -484,6 +484,24 @@ function buildTrendWhere(query: TrendQuery): {
     conditions.push(`quad_class = ${parameter}`);
   }
 
+  if (query.minGoldstein !== undefined) {
+    const parameter = addValue(values, query.minGoldstein);
+
+    conditions.push(`goldstein_scale >= ${parameter}`);
+  }
+
+  if (query.maxGoldstein !== undefined) {
+    const parameter = addValue(values, query.maxGoldstein);
+
+    conditions.push(`goldstein_scale <= ${parameter}`);
+  }
+
+  if (query.isRootEvent !== undefined) {
+    const parameter = addValue(values, query.isRootEvent);
+
+    conditions.push(`is_root_event = ${parameter}`);
+  }
+
   return {
     sql: conditions.length === 0 ? '' : `WHERE ${conditions.join(' AND ')}`,
 

@@ -46,7 +46,7 @@ export function FilterPanel() {
       </div>
 
       <label className="filter-field">
-        <span>Region</span>
+        <span>Map region</span>
 
         <select
           onChange={(event) => {
