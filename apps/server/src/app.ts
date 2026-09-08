@@ -50,3 +50,5 @@ app.use(notFoundHandler);
  * Error middleware MUST be last.
  */
 app.use(errorHandler);
+
+export default app
