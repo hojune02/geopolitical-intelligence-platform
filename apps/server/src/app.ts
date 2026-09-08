@@ -11,6 +11,10 @@ import { analyticsRouter } from './routes/analytics.routes.js';
 
 import { eventsRouter } from './routes/events.routes.js';
 
+import {
+  cronRouter,
+} from './routes/cron.routes.js';
+
 export const app = express();
 
 app.disable('x-powered-by');
@@ -40,6 +44,11 @@ app.get('/health', (_request, response) => {
 app.use('/api/v1/events', eventsRouter);
 
 app.use('/api/v1/analytics', analyticsRouter);
+
+app.use(
+  '/internal/cron',
+  cronRouter,
+);
 
 /*
  * Always after real routes.

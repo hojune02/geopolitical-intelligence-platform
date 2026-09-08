@@ -28,6 +28,10 @@ const envSchema = z.object({
     .string()
     .default('false')
     .transform((value) => value === 'true'),
+
+  CRON_SECRET: z
+  .string()
+  .min(32),
 });
 
 const result = envSchema.safeParse(process.env);

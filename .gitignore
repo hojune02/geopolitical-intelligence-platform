@@ -16,3 +16,5 @@ coverage/
 # OS/editor
 .DS_Store
 .idea/
+.vercel
+.env*

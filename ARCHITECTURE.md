@@ -705,6 +705,7 @@ test
   ↓
 build
 ```
+
 ````md
 ## 20. Container Architecture
 
@@ -732,6 +733,7 @@ PostgreSQL     Redis
 background:
   migrate job
   ingestion worker
+```
 ````
 
 ### 20.1 Client image
@@ -871,4 +873,5 @@ A future `packages/shared` workspace may contain API contracts and Zod schemas t
 The current client and server schemas remain separate so each trust boundary performs explicit runtime validation. Shared contracts should only be introduced when they reduce duplication without weakening those validation boundaries.
 
 ```
+
 ```
