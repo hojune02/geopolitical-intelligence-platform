@@ -13,6 +13,8 @@ analyticsRouter.get('/trends', async (request, response) => {
 
   const result = await getTrends(query);
 
+  response.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=900');
+
   response.status(200).json({
     ...result.payload,
 

@@ -18,8 +18,13 @@ import type { RegionId } from '../../stores/useFilterStore';
 
 import type { MapMode } from '../../stores/useUIStore';
 
+import type { Palette } from '../../lib/theme';
+
 interface GeopoliticalMapProps {
   points: MapEventPoint[];
+
+  /* Read once when the map is created; remount (key) to change theme. */
+  palette: Palette;
 
   mode: MapMode;
 
@@ -274,6 +279,7 @@ export function GeopoliticalMap({
   region,
   onBoundsChange,
   onEventSelect,
+  palette,
 }: GeopoliticalMapProps) {
   const [clusterSelection, setClusterSelection] = useState<ClusterSelection | null>(null);
 
@@ -401,7 +407,7 @@ export function GeopoliticalMap({
        * Replace with a production
        * tile/style provider later.
        */
-      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      style: palette.mapStyle,
 
       center: initialCamera.center,
 
@@ -462,22 +468,22 @@ export function GeopoliticalMap({
 
             ['get', 'point_count'],
 
-            '#55d9d0',
+            palette.cooperation,
 
             50,
-            '#b7f34a',
+            palette.tension,
 
             250,
-            '#f26b5e',
+            palette.violence,
           ],
 
           'circle-radius': ['step', ['get', 'point_count'], 16, 50, 22, 250, 30, 1000, 38],
 
-          'circle-opacity': 0.82,
+          'circle-opacity': 0.88,
 
-          'circle-stroke-color': '#e7eee9',
+          'circle-stroke-color': palette.mapHalo,
 
-          'circle-stroke-opacity': 0.6,
+          'circle-stroke-opacity': 1,
 
           'circle-stroke-width': 1,
 
@@ -502,6 +508,10 @@ export function GeopoliticalMap({
 
         paint: {
           'text-color': '#ffffff',
+
+          'text-halo-color': 'rgba(0, 0, 0, 0.25)',
+
+          'text-halo-width': 1,
         },
       });
 
@@ -524,18 +534,18 @@ export function GeopoliticalMap({
             ['get', 'goldsteinScale'],
 
             -10,
-            '#f26b5e',
+            palette.violence,
 
             0,
-            '#e8b95b',
+            palette.tension,
 
             10,
-            '#b7f34a',
+            palette.cooperation,
           ],
 
-          'circle-stroke-width': 1,
+          'circle-stroke-width': 1.5,
 
-          'circle-stroke-color': '#e7eee9',
+          'circle-stroke-color': palette.mapHalo,
         },
       });
 
@@ -580,17 +590,15 @@ export function GeopoliticalMap({
             ['linear'],
             ['heatmap-density'],
             0,
-            'rgba(5, 8, 6, 0)',
+            'rgba(0, 0, 0, 0)',
             0.2,
-            '#163b36',
-            0.4,
-            '#55d9d0',
-            0.65,
-            '#b7f34a',
-            0.82,
-            '#e8b95b',
+            palette.cooperationSoft,
+            0.45,
+            palette.cooperation,
+            0.7,
+            palette.tension,
             1,
-            '#f26b5e',
+            palette.violence,
           ],
 
           'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 0.9, 12, 0],
@@ -789,7 +797,7 @@ export function GeopoliticalMap({
             )}
 
             {visibleClusterSelection.loading && visibleClusterSelection.events.length === 0 ? (
-              <p className="cluster-event-loading">Decrypting event records…</p>
+              <p className="cluster-event-loading">Loading events…</p>
             ) : null}
 
             {visibleClusterSelection.events.map((event) => (

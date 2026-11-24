@@ -4,12 +4,32 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#050806" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f0f0e" media="(prefers-color-scheme: dark)" />
     <meta
       name="description"
-      content="Geopolitical, global intelligence network and geopolitical event analysis platform"
+      content="A daily briefing on where the world is escalating and cooling, built on GDELT event data."
     />
-    <title>Geopolitical Intelligence Platform // Global Intelligence Network</title>
+    <title>GIP. — Geopolitical Intelligence Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Montserrat:wght@500;600&display=swap"
+    />
+    <script>
+      /* Apply the saved theme before first paint so there is no flash. */
+      (function () {
+        var mode = 'system';
+        try {
+          var saved = JSON.parse(localStorage.getItem('gip-theme') || 'null');
+          if (saved && saved.state && saved.state.mode) mode = saved.state.mode;
+        } catch (e) {}
+        var dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -33,25 +33,31 @@ export function RouteErrorPage() {
 
   const message = getErrorMessage(error);
 
+  const notFound = isRouteErrorResponse(error) && error.status === 404;
+
   return (
     <section className="error-page">
-      <p className="eyebrow">Something went wrong</p>
+      <p className="eyebrow">{notFound ? 'Not found' : 'Something went wrong'}</p>
 
-      <h1>Unable to load this view</h1>
+      <h1>{notFound ? 'This record has moved on' : 'Unable to load this view'}</h1>
 
       <p>{message}</p>
 
       <div className="error-actions">
-        <button
-          onClick={() => {
-            window.location.reload();
-          }}
-          type="button"
-        >
-          Retry
-        </button>
+        {notFound ? null : (
+          <button
+            onClick={() => {
+              window.location.reload();
+            }}
+            type="button"
+          >
+            Retry
+          </button>
+        )}
 
-        <Link to="/dashboard">Dashboard</Link>
+        <Link to="/briefing">Today&apos;s briefing</Link>
+
+        <Link to="/dashboard">Event explorer</Link>
       </div>
     </section>
   );

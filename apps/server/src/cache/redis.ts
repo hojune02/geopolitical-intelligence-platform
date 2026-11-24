@@ -5,8 +5,15 @@ import { env } from '../config/env.js';
 export const redisClient = createClient({
   url: env.REDIS_URL,
 
+  /*
+   * Fail commands immediately while disconnected instead of queueing
+   * them until a reconnect that may never come (a rate-limited
+   * Upstash instance kept requests waiting ~10s).
+   */
+  disableOfflineQueue: true,
+
   socket: {
-    connectTimeout: 1_500,
+    connectTimeout: 800,
 
     /*
      * Give up after a few attempts instead of retrying forever;
@@ -74,37 +81,73 @@ export async function ensureRedis(): Promise<boolean> {
   const timeout = new Promise<boolean>((resolve) => {
     setTimeout(() => {
       resolve(false);
-    }, 1_500);
+    }, 800);
   });
 
   return Promise.race([attempt, timeout]);
 }
 
-export async function cacheGet(key: string): Promise<string | null> {
-  if (!(await ensureRedis())) {
-    return null;
-  }
+const COMMAND_TIMEOUT_MS = 400;
+
+/*
+ * A cache must never be slower than the database it fronts: every
+ * command gets a short deadline, and a failure starts the cool-down so
+ * later requests skip Redis entirely for a minute.
+ */
+const TIMED_OUT = Symbol('timed-out');
+
+async function withDeadline<T>(operation: Promise<T>, label: string): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const deadline = new Promise<typeof TIMED_OUT>((resolve) => {
+    timer = setTimeout(() => {
+      resolve(TIMED_OUT);
+    }, COMMAND_TIMEOUT_MS);
+  });
 
   try {
-    return await redisClient.get(key);
+    const result = await Promise.race([operation, deadline]);
+
+    if (result === TIMED_OUT) {
+      markRedisUnavailable(`${label} timed out`);
+      return null;
+    }
+
+    return result;
   } catch (error: unknown) {
-    console.error('Redis GET failed:', error);
+    markRedisUnavailable(`${label} failed`, error);
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
+function markRedisUnavailable(reason: string, error?: unknown): void {
+  if (Date.now() - lastFailureAt > REDIS_RETRY_COOLDOWN_MS) {
+    console.error(`Redis ${reason}; bypassing cache for 60s`, error ?? '');
+  }
+
+  lastFailureAt = Date.now();
+}
+
+function redisUsable(): boolean {
+  return Date.now() - lastFailureAt >= REDIS_RETRY_COOLDOWN_MS;
+}
+
+export async function cacheGet(key: string): Promise<string | null> {
+  if (!redisUsable() || !(await ensureRedis())) {
+    return null;
+  }
+
+  return withDeadline(redisClient.get(key), 'GET');
+}
+
 export async function cacheSet(key: string, value: string, ttlSeconds: number): Promise<void> {
-  if (!(await ensureRedis())) {
+  if (!redisUsable() || !(await ensureRedis())) {
     return;
   }
 
-  try {
-    await redisClient.set(key, value, {
-      EX: ttlSeconds,
-    });
-  } catch (error: unknown) {
-    console.error('Redis SET failed:', error);
-  }
+  await withDeadline(redisClient.set(key, value, { EX: ttlSeconds }), 'SET');
 }
 
 export async function cacheDelete(key: string): Promise<void> {
@@ -128,13 +171,9 @@ export async function getEventCacheVersion(): Promise<string> {
 }
 
 export async function bumpEventCacheVersion(): Promise<void> {
-  if (!(await ensureRedis())) {
+  if (!redisUsable() || !(await ensureRedis())) {
     return;
   }
 
-  try {
-    await redisClient.incr(EVENT_CACHE_VERSION_KEY);
-  } catch (error: unknown) {
-    console.error('Redis cache version increment failed:', error);
-  }
+  await withDeadline(redisClient.incr(EVENT_CACHE_VERSION_KEY), 'INCR');
 }

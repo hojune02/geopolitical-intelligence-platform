@@ -11,11 +11,15 @@ import {
 
 import type { TrendPoint } from '../../schemas/analytics.schema';
 
+import { usePalette } from '../../stores/useThemeStore';
+
 interface ImpactTrendChartProps {
   data: TrendPoint[];
 }
 
 export function ImpactTrendChart({ data }: ImpactTrendChartProps) {
+  const palette = usePalette();
+
   return (
     <div className="chart-card">
       <div className="chart-header">
@@ -37,14 +41,14 @@ export function ImpactTrendChart({ data }: ImpactTrendChartProps) {
               left: 0,
             }}
           >
-            <CartesianGrid stroke="#203128" strokeDasharray="3 5" />
+            <CartesianGrid stroke={palette.grid} vertical={false} />
 
-            <XAxis axisLine={{ stroke: '#385544' }} dataKey="bucket" minTickGap={24} />
+            <XAxis axisLine={{ stroke: palette.axis }} dataKey="bucket" minTickGap={24} tickLine={false} />
 
-            <YAxis axisLine={{ stroke: '#385544' }} domain={[-10, 10]} yAxisId="goldstein" />
+            <YAxis axisLine={false} domain={[-10, 10]} tickLine={false} width={40} yAxisId="goldstein" />
 
             <YAxis
-              axisLine={{ stroke: '#385544' }}
+              axisLine={false}
               domain={[-100, 100]}
               orientation="right"
               yAxisId="tone"
@@ -59,7 +63,7 @@ export function ImpactTrendChart({ data }: ImpactTrendChartProps) {
               dataKey="averageGoldstein"
               dot={false}
               name="Average Goldstein"
-              stroke="#b7f34a"
+              stroke={palette.ink}
               strokeWidth={2}
               type="monotone"
               yAxisId="goldstein"
@@ -70,7 +74,7 @@ export function ImpactTrendChart({ data }: ImpactTrendChartProps) {
               dataKey="averageTone"
               dot={false}
               name="Average Tone"
-              stroke="#55d9d0"
+              stroke={palette.tension}
               strokeWidth={1.5}
               type="monotone"
               yAxisId="tone"
