@@ -1,5 +1,14 @@
 import { create } from 'zustand';
 
+/* Filters start open beside the content on wide screens, collapsed above it otherwise. */
+function wideScreen(): boolean {
+  try {
+    return window.matchMedia('(min-width: 1101px)').matches;
+  } catch {
+    return true;
+  }
+}
+
 export type DashboardPanel = 'events' | 'analytics';
 
 export type MapMode = 'markers' | 'heatmap';
@@ -45,7 +54,7 @@ type UIStore = UIState & UIActions;
 const initialUIState: UIState = {
   sidebarOpen: true,
 
-  filterPanelOpen: true,
+  filterPanelOpen: wideScreen(),
 
   activePanel: 'events',
 

@@ -1866,3 +1866,58 @@ a.counterpart-row:hover .counterpart-name {
     display: none;
   }
 }
+
+/* ── QA polish ────────────────────────────────────── */
+
+/* One rule under the page head, not two. */
+.page-header + .panel,
+.page-header + .insight-strip,
+.page-header + .kpi-grid,
+.page-header + .summary-panel,
+.page-header + section {
+  border-top: 0;
+}
+
+.page-header + .insight-strip .insight {
+  padding-top: 4px;
+}
+
+/* Shortcut hints mean nothing on touch screens. */
+@media (hover: none) {
+  .palette-trigger kbd {
+    display: none;
+  }
+}
+
+/* Filters: a compact grid above the content when there is no sidebar room. */
+@media (max-width: 1100px) {
+  .filter-sidebar > section {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 0 16px;
+    align-items: end;
+  }
+
+  .filter-sidebar > section > .filter-header {
+    grid-column: 1 / -1;
+  }
+
+  .filter-toggle {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 800px) {
+  /*
+   * backdrop-filter makes the header the containing block for fixed
+   * children, which pinned the bottom navigation to the top.
+   */
+  .app-header {
+    background: var(--paper);
+    backdrop-filter: none;
+  }
+
+  .brand-mark {
+    font-size: 18px;
+  }
+}

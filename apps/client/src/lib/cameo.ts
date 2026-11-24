@@ -89,3 +89,18 @@ export function timeAgo(iso: string, now: number = Date.now()): string {
 
   return `${String(Math.round(hours / 24))}d ago`;
 }
+
+const KEEP_UPPER = new Set(['UN', 'US', 'UK', 'EU', 'NATO', 'IMF', 'WHO', 'ICC', 'ICJ', 'IAEA', 'OPEC', 'ASEAN', 'BRICS', 'G7', 'G20', 'UAE', 'USA', 'IDF', 'FBI', 'CIA', 'AU']);
+
+/* GDELT stores actor names in capitals; title-case them, keeping acronyms. */
+export function actorName(name: string | null | undefined, fallback = 'Unknown actor'): string {
+  if (name === null || name === undefined || name.trim() === '') {
+    return fallback;
+  }
+
+  return name
+    .toLowerCase()
+    .split(/(\s+|-)/)
+    .map((part) => (KEEP_UPPER.has(part.toUpperCase()) ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join('');
+}
