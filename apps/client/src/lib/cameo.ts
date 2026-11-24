@@ -55,10 +55,10 @@ export const QUAD_LABELS = {
 
 /** Colour for a Goldstein score: red (−10, destabilising) to green (+10). */
 export function goldsteinColor(score: number): string {
-  if (score <= -5) return 'var(--danger)';
-  if (score < 0) return 'var(--amber)';
-  if (score < 3) return 'var(--cyan)';
-  return 'var(--signal)';
+  if (score <= -5) return 'var(--violence)';
+  if (score < 0) return 'var(--tension)';
+  if (score < 3) return 'var(--ink)';
+  return 'var(--coop)';
 }
 
 export function describeGoldstein(score: number): string {

@@ -9,7 +9,7 @@ import { useFilterStore } from '../stores/useFilterStore';
 import { useUIStore } from '../stores/useUIStore';
 
 export function DashboardPage() {
-  const { data: events, total, loading, error, cacheHit } = useEventData();
+  const { data: events, total, loading, error } = useEventData();
 
   const activePanel = useUIStore((state) => state.activePanel);
 
@@ -53,8 +53,6 @@ export function DashboardPage() {
       <section className="panel">
         <div className="panel-header">
           <h2>Latest Events</h2>
-
-          <span>API cache: {cacheHit ? 'hit' : 'miss'}</span>
         </div>
 
         <div className="panel-tabs">

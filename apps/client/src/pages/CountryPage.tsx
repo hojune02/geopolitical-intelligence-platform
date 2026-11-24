@@ -25,6 +25,7 @@ import { fromCameo, fromFips } from '../lib/countries';
 import { countrySummary } from '../lib/narrative';
 
 import { useWatchlistStore } from '../stores/useWatchlistStore';
+import { usePalette } from '../stores/useThemeStore';
 
 const STATUS_LABEL = {
   escalating: 'Escalating',
@@ -41,6 +42,7 @@ export function CountryPage() {
   const params = useParams();
   const code = (params.countryCode ?? '').toUpperCase();
   const info = fromFips(code);
+  const palette = usePalette();
 
   const dossier = useAsync(`country:${code}`, (signal) =>
     fetchCountryDossier(code, signal).then((response) => response.data),
@@ -165,15 +167,15 @@ export function CountryPage() {
             <div className="chart-container">
               <ResponsiveContainer height="100%" width="100%">
                 <BarChart data={data.daily} margin={{ top: 10, right: 16, bottom: 4, left: 0 }}>
-                  <CartesianGrid stroke="#203128" strokeDasharray="3 5" />
-                  <XAxis axisLine={{ stroke: '#385544' }} dataKey="day" minTickGap={16} tickFormatter={(day: string) => day.slice(5)} />
-                  <YAxis allowDecimals={false} axisLine={{ stroke: '#385544' }} />
-                  <Tooltip contentStyle={{ background: '#0c120f', border: '1px solid #385544' }} cursor={{ fill: 'rgb(183 243 74 / 6%)' }} />
+                  <CartesianGrid stroke={palette.grid} vertical={false} />
+                  <XAxis axisLine={{ stroke: palette.axis }} tickLine={false} dataKey="day" minTickGap={16} tickFormatter={(day: string) => day.slice(5)} />
+                  <YAxis allowDecimals={false} axisLine={false} tickLine={false} width={44} />
+                  <Tooltip cursor={{ fill: palette.grid }} />
                   <Legend />
-                  <Bar dataKey="verbalCooperation" fill="#55d9d0" name="Verbal cooperation" stackId="q" />
-                  <Bar dataKey="materialCooperation" fill="#b7f34a" name="Material cooperation" stackId="q" />
-                  <Bar dataKey="verbalConflict" fill="#e8b95b" name="Verbal conflict" stackId="q" />
-                  <Bar dataKey="materialConflict" fill="#f26b5e" name="Material conflict" stackId="q" />
+                  <Bar dataKey="verbalCooperation" fill={palette.cooperationSoft} name="Verbal cooperation" stackId="q" />
+                  <Bar dataKey="materialCooperation" fill={palette.cooperation} name="Material cooperation" stackId="q" />
+                  <Bar dataKey="verbalConflict" fill={palette.tension} name="Verbal conflict" stackId="q" />
+                  <Bar dataKey="materialConflict" fill={palette.violence} name="Material conflict" stackId="q" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -464,6 +464,13 @@ function buildTrendWhere(query: TrendQuery): {
     const parameter = addValue(values, query.startDate);
 
     conditions.push(`event_date >= ${parameter}::date`);
+  } else {
+    /*
+     * GDELT occasionally reports on events dated years back; without an
+     * explicit start date, chart the last 30 days of event dates so a
+     * handful of 2016 rows do not stretch the time axis.
+     */
+    conditions.push(`event_date >= (SELECT max(added_at) FROM gdelt_events)::date - 30`);
   }
 
   if (query.endDate !== undefined) {

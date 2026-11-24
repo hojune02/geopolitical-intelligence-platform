@@ -1,7 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <rect width="48" height="48" fill="#050806"/>
-  <path fill="none" stroke="#b7f34a" d="M5 13V5h8M35 5h8v8M43 35v8h-8M13 43H5v-8"/>
-  <circle cx="24" cy="24" r="14" fill="none" stroke="#203128"/>
-  <path fill="none" stroke="#b7f34a" stroke-width="2.5" d="M31 17a10 10 0 1 0 1.8 12H25v-8h10"/>
-  <circle cx="24" cy="24" r="2" fill="#b7f34a"/>
+  <rect width="48" height="48" fill="#111"/>
+  <rect x="3.5" y="3.5" width="41" height="41" fill="none" stroke="#fff"/>
+  <text x="24" y="31" fill="#fff" font-family="Montserrat, Futura, Arial, sans-serif" font-size="17" font-weight="600" letter-spacing="1" text-anchor="middle">GIP</text>
 </svg>

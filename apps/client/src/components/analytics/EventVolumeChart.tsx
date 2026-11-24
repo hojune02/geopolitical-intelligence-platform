@@ -11,11 +11,15 @@ import {
 
 import type { TrendPoint } from '../../schemas/analytics.schema';
 
+import { usePalette } from '../../stores/useThemeStore';
+
 interface EventVolumeChartProps {
   data: TrendPoint[];
 }
 
 export function EventVolumeChart({ data }: EventVolumeChartProps) {
+  const palette = usePalette();
+
   return (
     <div className="chart-card">
       <div className="chart-header">
@@ -37,11 +41,11 @@ export function EventVolumeChart({ data }: EventVolumeChartProps) {
               left: 0,
             }}
           >
-            <CartesianGrid stroke="#203128" strokeDasharray="3 5" />
+            <CartesianGrid stroke={palette.grid} vertical={false} />
 
-            <XAxis axisLine={{ stroke: '#385544' }} dataKey="bucket" minTickGap={24} />
+            <XAxis axisLine={{ stroke: palette.axis }} dataKey="bucket" minTickGap={24} tickLine={false} />
 
-            <YAxis allowDecimals={false} axisLine={{ stroke: '#385544' }} />
+            <YAxis allowDecimals={false} axisLine={false} tickLine={false} width={48} />
 
             <Tooltip />
 
@@ -51,7 +55,7 @@ export function EventVolumeChart({ data }: EventVolumeChartProps) {
               dataKey="eventCount"
               dot={false}
               name="Events"
-              stroke="#b7f34a"
+              stroke={palette.ink}
               strokeWidth={2}
               type="monotone"
             />
@@ -60,7 +64,7 @@ export function EventVolumeChart({ data }: EventVolumeChartProps) {
               dataKey="conflictEvents"
               dot={false}
               name="Conflict Events"
-              stroke="#f26b5e"
+              stroke={palette.violence}
               strokeWidth={1.5}
               type="monotone"
             />

@@ -9,6 +9,7 @@ import { GeopoliticalMap } from '../components/map/GeopoliticalMap';
 import { useFilterStore } from '../stores/useFilterStore';
 
 import { useUIStore } from '../stores/useUIStore';
+import { usePalette, useThemeStore } from '../stores/useThemeStore';
 import { useMapEventData } from '../hooks/useMapEventData';
 
 export function HeatmapPage() {
@@ -16,11 +17,15 @@ export function HeatmapPage() {
 
   const [bounds, setBounds] = useState<MapBounds | null>(null);
 
-  const { points, loading, error, truncated, cacheHit } = useMapEventData(bounds);
+  const { points, loading, error, truncated } = useMapEventData(bounds);
 
   const activeRegion = useFilterStore((state) => state.activeRegion);
 
   const mapMode = useUIStore((state) => state.mapMode);
+
+  const palette = usePalette();
+
+  const theme = useThemeStore((state) => state.resolved);
 
   const setMapMode = useUIStore((state) => state.setMapMode);
 
@@ -39,7 +44,7 @@ export function HeatmapPage() {
     <section>
       <header className="page-header">
         <div>
-          <p className="eyebrow">Geographic intelligence</p>
+          <p className="eyebrow">Geography</p>
 
           <h1>Global Event Map</h1>
         </div>
@@ -68,9 +73,7 @@ export function HeatmapPage() {
       </header>
 
       <div className="map-status">
-        <span>Events: {points.length}</span>
-
-        <span>Cache: {cacheHit ? 'hit' : 'miss'}</span>
+        <span>{points.length.toLocaleString()} events in view</span>
 
         <span aria-hidden={!loading} className={loading ? undefined : 'is-invisible'}>
           Updating…
@@ -79,7 +82,9 @@ export function HeatmapPage() {
 
       <div className="map-shell">
         <GeopoliticalMap
+          key={theme}
           mode={mapMode}
+          palette={palette}
           onBoundsChange={handleBoundsChange}
           onEventSelect={handleEventSelect}
           points={points}

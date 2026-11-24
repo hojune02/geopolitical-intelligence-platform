@@ -6,70 +6,79 @@ import { GlobalModal } from '../components/ui/GlobalModal';
 
 import { openCommandPalette } from '../lib/palette';
 
-import { useUIStore } from '../stores/useUIStore';
+import { useThemeStore, type ThemeMode } from '../stores/useThemeStore';
+
+const THEME_ICON: Record<ThemeMode, string> = {
+  system: '◐',
+  light: '○',
+  dark: '●',
+};
+
+const THEME_LABEL: Record<ThemeMode, string> = {
+  system: 'Theme: follows system',
+  light: 'Theme: light',
+  dark: 'Theme: dark',
+};
+
+const navClass = ({ isActive }: { isActive: boolean }) => (isActive ? 'nav-link active' : 'nav-link');
 
 export function AppLayout() {
-  const sidebarOpen = useUIStore((state) => state.sidebarOpen);
+  const themeMode = useThemeStore((state) => state.mode);
 
-  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+  const cycleTheme = useThemeStore((state) => state.cycle);
 
   return (
     <div className="app-shell">
       <header className="app-header">
         <div className="header-left">
-          <button
-            aria-expanded={sidebarOpen}
-            aria-label="Toggle navigation"
-            className="menu-button"
-            onClick={toggleSidebar}
-            type="button"
-          >
-            <span aria-hidden="true" className="menu-glyph" />
-          </button>
-
-          <NavLink className="brand" to="/briefing">
-            <span aria-hidden="true" className="brand-mark">
-              G
-            </span>
+          <NavLink aria-label="GIP. home" className="brand" to="/briefing">
+            <span className="brand-mark">GIP.</span>
 
             <span className="brand-copy">
-              <span className="brand-name">Geopolitical Intelligence Platform</span>
+              <span className="brand-name">Geopolitical Intelligence</span>
 
-              <span className="brand-subtitle">Global intelligence network</span>
+              <span className="brand-subtitle">A daily briefing from GDELT</span>
             </span>
           </NavLink>
         </div>
 
         <div className="header-actions">
-          <button className="palette-trigger header-search" onClick={openCommandPalette} type="button">
-            Search <kbd>⌘K</kbd>
+          <nav aria-label="Main" className="main-navigation">
+            <NavLink className={navClass} to="/briefing">
+              Briefing
+            </NavLink>
+
+            <NavLink className={navClass} end to="/dashboard">
+              Events
+            </NavLink>
+
+            <NavLink className={navClass} to="/dashboard/heatmap">
+              Map
+            </NavLink>
+          </nav>
+
+          <button
+            aria-label="Search countries"
+            className="palette-trigger header-search"
+            onClick={openCommandPalette}
+            type="button"
+          >
+            <span aria-hidden="true" className="search-icon">
+              ⌕
+            </span>
+            <span className="search-label">Search countries</span>
+            <kbd>⌘K</kbd>
           </button>
 
-          {sidebarOpen ? (
-            <nav className="main-navigation">
-              <NavLink
-                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-                to="/briefing"
-              >
-                Briefing
-              </NavLink>
-
-              <NavLink
-                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-                end
-                to="/dashboard"
-              >
-                Events
-              </NavLink>
-
-              <NavLink
-                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-                to="/dashboard/heatmap"
-              >
-                Map
-              </NavLink>
-            </nav>
-          ) : null}
+          <button
+            aria-label={`${THEME_LABEL[themeMode]}. Switch theme`}
+            className="theme-toggle"
+            onClick={cycleTheme}
+            title={THEME_LABEL[themeMode]}
+            type="button"
+          >
+            <span aria-hidden="true">{THEME_ICON[themeMode]}</span>
+          </button>
         </div>
       </header>
 

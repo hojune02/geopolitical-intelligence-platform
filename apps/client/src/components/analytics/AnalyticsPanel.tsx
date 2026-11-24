@@ -11,7 +11,7 @@ import { ImpactTrendChart } from './ImpactTrendChart';
 export function AnalyticsPanel() {
   const [bucket, setBucket] = useState<TrendBucket>('day');
 
-  const { data, loading, error, cacheHit } = useTrendData(bucket);
+  const { data, loading, error } = useTrendData(bucket);
 
   const totalEvents = useMemo(
     () =>
@@ -70,11 +70,7 @@ export function AnalyticsPanel() {
       </div>
 
       <div className="analytics-status">
-        {loading ? (
-          <span>Loading analytics…</span>
-        ) : (
-          <span>Cache: {cacheHit ? 'hit' : 'miss'}</span>
-        )}
+        {loading ? <span>Loading analytics…</span> : <span>Grouped by event date · last 30 days unless filtered</span>}
       </div>
 
       {error !== null ? (
