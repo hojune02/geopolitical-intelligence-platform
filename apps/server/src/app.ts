@@ -11,6 +11,8 @@ import { analyticsRouter } from './routes/analytics.routes.js';
 
 import { eventsRouter } from './routes/events.routes.js';
 
+import { insightsRouter } from './routes/insights.routes.js';
+
 import {
   cronRouter,
 } from './routes/cron.routes.js';
@@ -44,6 +46,8 @@ app.get('/health', (_request, response) => {
 app.use('/api/v1/events', eventsRouter);
 
 app.use('/api/v1/analytics', analyticsRouter);
+
+app.use('/api/v1/insights', insightsRouter);
 
 app.use(
   '/internal/cron',

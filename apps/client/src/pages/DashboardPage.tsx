@@ -1,6 +1,9 @@
 import { Link } from 'react-router';
 
 import { AnalyticsPanel } from '../components/analytics/AnalyticsPanel';
+import { GoldsteinMeter } from '../components/insights/GoldsteinMeter';
+import { rootLabel, rootStance } from '../lib/cameo';
+import { fromFips } from '../lib/countries';
 import { useEventData } from '../hooks/useEventData';
 import { useFilterStore } from '../stores/useFilterStore';
 import { useUIStore } from '../stores/useUIStore';
@@ -20,9 +23,9 @@ export function DashboardPage() {
     <section>
       <header className="page-header">
         <div>
-          <p className="eyebrow">Intelligence overview</p>
+          <p className="eyebrow">Raw events</p>
 
-          <h1>Geopolitical Dashboard</h1>
+          <h1>Event explorer</h1>
         </div>
 
         <div className="active-filters">
@@ -87,23 +90,42 @@ export function DashboardPage() {
             ) : null}
 
             <div className="event-list">
-              {events.map((event) => (
-                <article className="event-card" key={event.id}>
-                  <div>
-                    <strong>{event.actors.source.name ?? 'Unknown actor'}</strong>
+              {events.map((event) => {
+                const country = fromFips(event.location?.countryCode);
+                const stance = rootStance(event.action.rootCode);
 
-                    {' → '}
+                return (
+                  <article className={`event-card stance-${stance}`} key={event.id}>
+                    <div className="event-card-top">
+                      <span className={`story-tag tag-${stance}`}>{rootLabel(event.action.rootCode)}</span>
+                      {country.fips !== null ? (
+                        <Link className="story-country" to={`/countries/${country.fips}`}>
+                          {country.flag} {country.name}
+                        </Link>
+                      ) : null}
+                    </div>
 
-                    <strong>{event.actors.target.name ?? 'Unknown actor'}</strong>
-                  </div>
+                    <div className="event-card-actors">
+                      <strong>{event.actors.source.name ?? 'Unknown actor'}</strong>
+                      {' → '}
+                      <strong>{event.actors.target.name ?? 'Unknown actor'}</strong>
+                    </div>
 
-                  <p>Goldstein: {event.action.goldsteinScale}</p>
+                    <p className="event-card-place">{event.location?.name ?? 'Unknown location'}</p>
 
-                  <p>{event.location?.name ?? 'Unknown location'}</p>
+                    <GoldsteinMeter compact value={event.action.goldsteinScale} />
 
-                  <Link to={`/events/${event.id}`}>View event</Link>
-                </article>
-              ))}
+                    <div className="event-card-links">
+                      <Link to={`/events/${event.id}`}>Details</Link>
+                      {event.sourceUrl !== null ? (
+                        <a href={event.sourceUrl} rel="noopener noreferrer" target="_blank">
+                          Source ↗
+                        </a>
+                      ) : null}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </>
         ) : (
