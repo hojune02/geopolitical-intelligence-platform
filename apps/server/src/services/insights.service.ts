@@ -344,6 +344,16 @@ function syndicationKey(rawUrl: string): string | null {
   return match?.[1] === undefined ? null : `id:${match[1]}`;
 }
 
+/* The same article is sometimes stored as http/https, with :443 or a trailing slash. */
+function normaliseUrl(rawUrl: string): string {
+  return rawUrl
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/:(80|443)(?=\/|$)/, '')
+    .replace(/\/+$/, '');
+}
+
 function toStory(row: StoryRow): Story & { key: string } {
   const { headline, domain } = headlineFromUrl(row.source_url);
 
@@ -352,7 +362,7 @@ function toStory(row: StoryRow): Story & { key: string } {
   return {
     key:
       syndicationKey(row.source_url) ??
-      (headline === domain ? row.source_url : normaliseHeadline(headline)),
+      (headline === domain ? normaliseUrl(row.source_url) : normaliseHeadline(headline)),
     headline,
     url: row.source_url,
     domain,

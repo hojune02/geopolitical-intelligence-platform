@@ -74,7 +74,9 @@ export function EventDetailPage() {
           <span>Coverage</span>
           <strong>{event.metrics.mentions.toLocaleString()}</strong>
           <small>
-            mentions · {String(event.metrics.sources)} sources · {String(event.metrics.articles)} articles
+            {event.metrics.mentions === 1 ? 'mention' : 'mentions'} · {String(event.metrics.sources)}{' '}
+            {event.metrics.sources === 1 ? 'source' : 'sources'} · {String(event.metrics.articles)}{' '}
+            {event.metrics.articles === 1 ? 'article' : 'articles'}
           </small>
         </div>
       </div>
