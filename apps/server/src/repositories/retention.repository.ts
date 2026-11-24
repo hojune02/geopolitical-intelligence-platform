@@ -19,11 +19,19 @@ export async function countExpiredEvents(retentionDays: number): Promise<number>
   return Number(result.rows[0]?.count ?? 0);
 }
 
-export async function deleteExpiredEvents(retentionDays: number): Promise<number> {
+export async function deleteExpiredEvents(
+  retentionDays: number,
+  deadline: number = Number.POSITIVE_INFINITY,
+): Promise<number> {
   let totalDeleted = 0;
   let deleted = DELETE_BATCH_SIZE;
 
-  while (deleted === DELETE_BATCH_SIZE) {
+  /*
+   * Deleting in bounded batches keeps each statement short, and the
+   * deadline lets an HTTP-triggered sweep stop before its caller times
+   * out; the next run continues where this one stopped.
+   */
+  while (deleted === DELETE_BATCH_SIZE && Date.now() < deadline) {
     const result = await db.query(
       `
         WITH doomed AS (

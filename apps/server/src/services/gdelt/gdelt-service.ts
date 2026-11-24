@@ -42,10 +42,28 @@ function getExportUrl(manifest: string): string {
   return url.toString();
 }
 
-async function fetchArchive(url: string): Promise<ArrayBuffer> {
+const DEFAULT_ARCHIVE_TIMEOUT_MS = 30_000;
+
+export class GdeltExportNotFoundError extends Error {
+  public constructor(url: string) {
+    super(`GDELT export not published: ${url}`);
+
+    this.name = 'GdeltExportNotFoundError';
+  }
+}
+
+async function fetchArchive(url: string, timeoutMs: number): Promise<ArrayBuffer> {
   const response = await fetch(url, {
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
+
+  /*
+   * GDELT occasionally skips a 15-minute slot. That is not a
+   * failure of this system, so callers can treat it separately.
+   */
+  if (response.status === 404) {
+    throw new GdeltExportNotFoundError(url);
+  }
 
   if (!response.ok) {
     throw new Error(`GDELT archive request failed with status ${String(response.status)}`);
@@ -72,8 +90,11 @@ export async function fetchLatestGdeltExportUrl(): Promise<string> {
   return getExportUrl(manifest);
 }
 
-export async function fetchGdeltExport(exportUrl: string) {
-  const archive = await fetchArchive(exportUrl);
+export async function fetchGdeltExport(
+  exportUrl: string,
+  timeoutMs: number = DEFAULT_ARCHIVE_TIMEOUT_MS,
+) {
+  const archive = await fetchArchive(exportUrl, timeoutMs);
 
   const contents = unzipExport(archive);
 
