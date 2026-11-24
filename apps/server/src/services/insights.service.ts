@@ -95,6 +95,11 @@ function poissonZ(observed: number, expected: number | null): number | null {
   return (observed - expected) / Math.sqrt(expected + 1);
 }
 
+/* Ratio with a pseudo-count so tiny baselines cannot produce 50× spikes. */
+function shrunkRatio(observed: number, expected: number): number {
+  return (observed + 5) / (expected + 5);
+}
+
 function scoreRadar(rows: RadarRow[], baselineHours: number): RadarCountry[] {
   const recentAll = rows.reduce((sum, row) => sum + Number(row.r_total), 0);
 
@@ -122,10 +127,19 @@ function scoreRadar(rows: RadarRow[], baselineHours: number): RadarCountry[] {
 
     if (bTotal === 0 && rTotal > 0) {
       status = 'new';
-    } else if (conflictZ !== null && conflictZ >= 2 && rConflict >= 8) {
-      status = 'escalating';
-    } else if (conflictZ !== null && conflictZ <= -2 && (expectedConflict ?? 0) >= 8) {
-      status = 'cooling';
+    } else if (expectedConflict !== null) {
+      const ratio = shrunkRatio(rConflict, expectedConflict);
+
+      /*
+       * Both tests must pass: the z-score says the change is unlikely
+       * to be noise, the ratio says it is large relative to the
+       * country's own level (z alone always favours big countries).
+       */
+      if (conflictZ !== null && conflictZ >= 3 && ratio >= 1.5 && rConflict >= 10) {
+        status = 'escalating';
+      } else if (conflictZ !== null && conflictZ <= -3 && ratio <= 0.67 && expectedConflict >= 10) {
+        status = 'cooling';
+      }
     }
 
     return {
@@ -151,6 +165,10 @@ function scoreRadar(rows: RadarRow[], baselineHours: number): RadarCountry[] {
       },
     };
   });
+}
+
+function radarRatio(country: RadarCountry): number {
+  return shrunkRatio(country.recent.conflictEvents, country.baseline.expectedConflictEvents ?? 0);
 }
 
 async function attachSparklines(countries: RadarCountry[]): Promise<void> {
@@ -194,12 +212,12 @@ async function computeRadar(): Promise<RadarPayload> {
 
   const escalating = scored
     .filter((country) => country.status === 'escalating')
-    .sort((a, b) => (b.conflictZ ?? 0) - (a.conflictZ ?? 0))
+    .sort((a, b) => radarRatio(b) - radarRatio(a))
     .slice(0, 8);
 
   const cooling = scored
     .filter((country) => country.status === 'cooling')
-    .sort((a, b) => (a.conflictZ ?? 0) - (b.conflictZ ?? 0))
+    .sort((a, b) => radarRatio(a) - radarRatio(b))
     .slice(0, 8);
 
   const mostCovered = [...scored]
@@ -316,13 +334,24 @@ function normaliseHeadline(headline: string): string {
   return headline.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
 }
 
+/*
+ * Newspaper networks (e.g. Newsquest's UK local titles) republish one
+ * wire article under the same numeric ID with different slugs.
+ */
+function syndicationKey(rawUrl: string): string | null {
+  const match = /\/(\d{7,})[./-][a-z]/i.exec(rawUrl);
+  return match?.[1] === undefined ? null : `id:${match[1]}`;
+}
+
 function toStory(row: StoryRow): Story & { key: string } {
   const { headline, domain } = headlineFromUrl(row.source_url);
 
   const events = Number(row.events);
 
   return {
-    key: headline === domain ? row.source_url : normaliseHeadline(headline),
+    key:
+      syndicationKey(row.source_url) ??
+      (headline === domain ? row.source_url : normaliseHeadline(headline)),
     headline,
     url: row.source_url,
     domain,
