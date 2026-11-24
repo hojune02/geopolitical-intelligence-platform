@@ -2,6 +2,10 @@ import { createBrowserRouter, redirect } from 'react-router';
 
 import { AppLayout } from '../layouts/AppLayout';
 
+import { BriefingPage } from '../pages/BriefingPage';
+
+import { CountryPage } from '../pages/CountryPage';
+
 import { DashboardLayout } from '../layouts/DashboardLayout';
 
 import { DashboardPage } from '../pages/DashboardPage';
@@ -28,7 +32,23 @@ export const router = createBrowserRouter([
       {
         index: true,
 
-        loader: () => redirect('/dashboard'),
+        loader: () => redirect('/briefing'),
+      },
+
+      {
+        path: 'briefing',
+
+        Component: BriefingPage,
+
+        ErrorBoundary: RouteErrorPage,
+      },
+
+      {
+        path: 'countries/:countryCode',
+
+        Component: CountryPage,
+
+        ErrorBoundary: RouteErrorPage,
       },
 
       {

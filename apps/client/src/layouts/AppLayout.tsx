@@ -1,6 +1,10 @@
 import { NavLink, Outlet } from 'react-router';
 
+import { CommandPalette } from '../components/ui/CommandPalette';
+
 import { GlobalModal } from '../components/ui/GlobalModal';
+
+import { openCommandPalette } from '../lib/palette';
 
 import { useUIStore } from '../stores/useUIStore';
 
@@ -23,7 +27,7 @@ export function AppLayout() {
             <span aria-hidden="true" className="menu-glyph" />
           </button>
 
-          <NavLink className="brand" to="/dashboard">
+          <NavLink className="brand" to="/briefing">
             <span aria-hidden="true" className="brand-mark">
               G
             </span>
@@ -37,26 +41,32 @@ export function AppLayout() {
         </div>
 
         <div className="header-actions">
-          <span className="system-status">
-            <span aria-hidden="true" className="status-dot" />
-            Network online
-          </span>
+          <button className="palette-trigger header-search" onClick={openCommandPalette} type="button">
+            Search <kbd>⌘K</kbd>
+          </button>
 
           {sidebarOpen ? (
             <nav className="main-navigation">
               <NavLink
                 className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+                to="/briefing"
+              >
+                Briefing
+              </NavLink>
+
+              <NavLink
+                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
                 end
                 to="/dashboard"
               >
-                Dashboard
+                Events
               </NavLink>
 
               <NavLink
                 className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
                 to="/dashboard/heatmap"
               >
-                Heatmap
+                Map
               </NavLink>
             </nav>
           ) : null}
@@ -68,6 +78,8 @@ export function AppLayout() {
       </main>
 
       <GlobalModal />
+
+      <CommandPalette />
     </div>
   );
 }
