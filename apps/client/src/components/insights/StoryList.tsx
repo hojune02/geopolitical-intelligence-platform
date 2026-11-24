@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 
-import { rootLabel, rootStance, timeAgo } from '../../lib/cameo';
+import { actorName, rootLabel, rootStance, timeAgo } from '../../lib/cameo';
 import { fromFips } from '../../lib/countries';
 
 import type { Story } from '../../schemas/insights.schema';
@@ -18,7 +18,7 @@ function headlineFor(story: Story): string {
   }
 
   /* No readable slug: describe the story from its actors and place. */
-  const actors = story.actors.length > 0 ? story.actors.join(' & ') : 'Report';
+  const actors = story.actors.length > 0 ? [...new Set(story.actors.map((actor) => actorName(actor)))].join(' & ') : 'Report';
 
   return `${actors}: ${rootLabel(story.rootCode).toLowerCase()}${story.place === null ? '' : ` in ${story.place.split(',')[0] ?? story.place}`}`;
 }

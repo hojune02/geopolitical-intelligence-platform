@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 
 import { AnalyticsPanel } from '../components/analytics/AnalyticsPanel';
 import { GoldsteinMeter } from '../components/insights/GoldsteinMeter';
-import { rootLabel, rootStance } from '../lib/cameo';
+import { actorName, rootLabel, rootStance } from '../lib/cameo';
 import { fromFips } from '../lib/countries';
 import { useEventData } from '../hooks/useEventData';
 import { useFilterStore } from '../stores/useFilterStore';
@@ -46,7 +46,7 @@ export function DashboardPage() {
         <div className="stat">
           <span>Matching events</span>
 
-          <strong>{total}</strong>
+          <strong>{total.toLocaleString()}</strong>
         </div>
       </header>
 
@@ -104,9 +104,9 @@ export function DashboardPage() {
                     </div>
 
                     <div className="event-card-actors">
-                      <strong>{event.actors.source.name ?? 'Unknown actor'}</strong>
+                      <strong>{actorName(event.actors.source.name)}</strong>
                       {' → '}
-                      <strong>{event.actors.target.name ?? 'Unknown actor'}</strong>
+                      <strong>{actorName(event.actors.target.name)}</strong>
                     </div>
 
                     <p className="event-card-place">{event.location?.name ?? 'Unknown location'}</p>

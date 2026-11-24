@@ -2,7 +2,7 @@ import { Link, useLoaderData } from 'react-router';
 
 import { GoldsteinMeter } from '../components/insights/GoldsteinMeter';
 
-import { describeTone, QUAD_LABELS, rootLabel, rootStance, rootVerb } from '../lib/cameo';
+import { actorName, describeTone, QUAD_LABELS, rootLabel, rootStance, rootVerb } from '../lib/cameo';
 import { fromCameo, fromFips } from '../lib/countries';
 
 import type { EventDetailLoaderData } from '../router/loaders/event-detail.loader';
@@ -15,8 +15,8 @@ export function EventDetailPage() {
   const target = fromCameo(event.actors.target.countryCode);
   const stance = rootStance(event.action.rootCode);
 
-  const sourceName = event.actors.source.name ?? 'An unidentified actor';
-  const targetName = event.actors.target.name ?? 'an unidentified party';
+  const sourceName = actorName(event.actors.source.name, 'An unidentified actor');
+  const targetName = actorName(event.actors.target.name, 'an unidentified party');
 
   return (
     <section className="event-detail">
@@ -32,7 +32,7 @@ export function EventDetailPage() {
         <span className="story-tag">{QUAD_LABELS[event.action.quadClass.label]}</span>
         {place.fips !== null ? (
           <Link className="story-country" to={`/countries/${place.fips}`}>
-            {place.flag} {event.location?.name ?? place.name} — open dossier →
+            {place.flag} {event.location?.name ?? place.name} · open dossier →
           </Link>
         ) : (
           <span>{event.location?.name ?? 'Location unknown'}</span>
@@ -63,7 +63,7 @@ export function EventDetailPage() {
         <div className="actor-pair">
           <div>
             <span className="actor-role">Source</span>
-            <strong>{event.actors.source.name ?? 'Unknown'}</strong>
+            <strong>{actorName(event.actors.source.name, 'Unknown')}</strong>
             <span>
               {source.flag} {source.code === '' ? 'No country' : source.name}
             </span>
@@ -73,7 +73,7 @@ export function EventDetailPage() {
           </span>
           <div>
             <span className="actor-role">Target</span>
-            <strong>{event.actors.target.name ?? 'Unknown'}</strong>
+            <strong>{actorName(event.actors.target.name, 'Unknown')}</strong>
             <span>
               {target.flag} {target.code === '' ? 'No country' : target.name}
             </span>

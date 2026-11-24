@@ -20,7 +20,7 @@ import { StoryList } from '../components/insights/StoryList';
 
 import { useAsync } from '../hooks/useAsync';
 
-import { describeTone, rootLabel, rootStance } from '../lib/cameo';
+import { actorName, describeTone, rootLabel, rootStance } from '../lib/cameo';
 import { fromCameo, fromFips } from '../lib/countries';
 import { countrySummary } from '../lib/narrative';
 
@@ -237,7 +237,7 @@ export function CountryPage() {
               <ul className="actor-list">
                 {data.actors.map((actor) => (
                   <li key={actor.name}>
-                    <span>{actor.name}</span>
+                    <span>{actorName(actor.name)}</span>
                     <GoldsteinMeter compact value={actor.averageGoldstein} />
                     <span className="bar-value">{actor.events.toLocaleString()}</span>
                   </li>
