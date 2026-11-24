@@ -10,6 +10,8 @@ import {
   runGdeltIngestionCycle,
 } from '../services/gdelt/gdelt-ingestion.service.js';
 
+import { runRetentionSweep } from '../services/retention.service.js';
+
 export const cronRouter = Router();
 
 function digest(value: string): Buffer {
@@ -82,6 +84,38 @@ cronRouter.get('/gdelt-ingest', async (request, response, next) => {
       return;
     }
 
+    next(caught);
+  }
+});
+
+/*
+ * Daily sweep. On Vercel the long-running worker (which used to own
+ * retention) never runs, so without this endpoint gdelt_events grows
+ * until the database's storage limit rejects every write.
+ */
+cronRouter.get('/retention', async (request, response, next) => {
+  if (!isAuthorized(request.header('authorization'))) {
+    response.status(401).json({
+      error: {
+        code: 'UNAUTHORIZED',
+        message: 'Unauthorized',
+      },
+    });
+
+    return;
+  }
+
+  try {
+    const result = await runRetentionSweep(
+      env.GDELT_EVENT_RETENTION_DAYS,
+      env.GDELT_RETENTION_ENABLED,
+      env.CRON_TIME_BUDGET_SECONDS * 1_000,
+    );
+
+    console.info('[cron] retention', JSON.stringify(result));
+
+    response.status(200).json({ data: result });
+  } catch (caught: unknown) {
     next(caught);
   }
 });

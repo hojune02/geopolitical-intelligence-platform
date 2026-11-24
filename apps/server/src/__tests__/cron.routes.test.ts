@@ -60,3 +60,11 @@ describe('GET /internal/cron/gdelt-ingest', () => {
     expect(response.body.error).toMatchObject({ code, stage, message: 'boom' });
   });
 });
+
+describe('GET /internal/cron/retention', () => {
+  it('rejects requests without the cron secret', async () => {
+    const response = await request(app).get('/internal/cron/retention');
+
+    expect(response.status).toBe(401);
+  });
+});
