@@ -2112,3 +2112,11 @@ a.story-country {
   background: transparent;
   color: var(--tension);
 }
+
+/* Narrow screens stack the insights; mixing two auto-fit columns with
+   the stacked rule offset the second card. */
+@media (max-width: 800px) {
+  .insight-strip {
+    grid-template-columns: 1fr;
+  }
+}
