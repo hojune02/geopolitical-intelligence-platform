@@ -29,9 +29,13 @@ const envSchema = z.object({
     .default('false')
     .transform((value) => value === 'true'),
 
-  CRON_SECRET: z
-  .string()
-  .min(32),
+  CRON_SECRET: z.string().min(32),
+
+  /*
+   * Wall-clock budget for one HTTP-triggered ingestion cycle.
+   * cron-job.org aborts requests after 30s, so stay below that.
+   */
+  CRON_TIME_BUDGET_SECONDS: z.coerce.number().int().min(5).max(800).default(25),
 });
 
 const result = envSchema.safeParse(process.env);

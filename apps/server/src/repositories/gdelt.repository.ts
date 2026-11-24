@@ -12,91 +12,76 @@ interface BatchRow extends QueryResultRow {
   export_url: string;
 }
 
-const UPSERT_EVENT_SQL = `
+/*
+ * Column name and PostgreSQL array type, in insert order.
+ * The order must match eventToSqlValues().
+ */
+const EVENT_COLUMNS = [
+  ['id', 'text[]'],
+
+  ['event_date', 'date[]'],
+  ['added_at', 'timestamptz[]'],
+
+  ['actor1_code', 'text[]'],
+  ['actor1_name', 'text[]'],
+  ['actor1_country_code', 'text[]'],
+
+  ['actor2_code', 'text[]'],
+  ['actor2_name', 'text[]'],
+  ['actor2_country_code', 'text[]'],
+
+  ['event_code', 'text[]'],
+  ['event_base_code', 'text[]'],
+  ['event_root_code', 'text[]'],
+
+  ['quad_class', 'smallint[]'],
+  ['goldstein_scale', 'float8[]'],
+
+  ['is_root_event', 'boolean[]'],
+
+  ['num_mentions', 'int[]'],
+  ['num_sources', 'int[]'],
+  ['num_articles', 'int[]'],
+  ['avg_tone', 'float8[]'],
+
+  ['location_name', 'text[]'],
+  ['location_country_code', 'text[]'],
+  ['latitude', 'float8[]'],
+  ['longitude', 'float8[]'],
+
+  ['source_url', 'text[]'],
+] as const;
+
+const COLUMN_NAMES = EVENT_COLUMNS.map(([name]) => name);
+
+const UNNEST_ARGUMENTS = EVENT_COLUMNS.map(
+  ([, arrayType], index) => `$${String(index + 1)}::${arrayType}`,
+);
+
+const UPDATE_ASSIGNMENTS = COLUMN_NAMES.filter((name) => name !== 'id')
+  .map((name) => `${name} = EXCLUDED.${name}`)
+  .concat('updated_at = NOW()');
+
+/*
+ * One statement per chunk instead of one round trip per event.
+ * A GDELT export holds ~1-2k events, and per-row upserts against
+ * a remote (serverless) database cost several seconds per batch,
+ * which is what pushed the cron request past its time limits.
+ */
+const BULK_UPSERT_EVENTS_SQL = `
   INSERT INTO gdelt_events (
-    id,
-
-    event_date,
-    added_at,
-
-    actor1_code,
-    actor1_name,
-    actor1_country_code,
-
-    actor2_code,
-    actor2_name,
-    actor2_country_code,
-
-    event_code,
-    event_base_code,
-    event_root_code,
-
-    quad_class,
-    goldstein_scale,
-
-    is_root_event,
-
-    num_mentions,
-    num_sources,
-    num_articles,
-    avg_tone,
-
-    location_name,
-    location_country_code,
-    latitude,
-    longitude,
-
-    source_url
+    ${COLUMN_NAMES.join(',\n    ')}
   )
-  VALUES (
-    $1,  $2,  $3,
-    $4,  $5,  $6,
-    $7,  $8,  $9,
-    $10, $11, $12,
-    $13, $14,
-    $15,
-    $16, $17, $18, $19,
-    $20, $21, $22, $23,
-    $24
+  SELECT *
+  FROM unnest(
+    ${UNNEST_ARGUMENTS.join(',\n    ')}
   )
   ON CONFLICT (id)
   DO UPDATE SET
-    event_date = EXCLUDED.event_date,
-    added_at = EXCLUDED.added_at,
-
-    actor1_code = EXCLUDED.actor1_code,
-    actor1_name = EXCLUDED.actor1_name,
-    actor1_country_code = EXCLUDED.actor1_country_code,
-
-    actor2_code = EXCLUDED.actor2_code,
-    actor2_name = EXCLUDED.actor2_name,
-    actor2_country_code = EXCLUDED.actor2_country_code,
-
-    event_code = EXCLUDED.event_code,
-    event_base_code = EXCLUDED.event_base_code,
-    event_root_code = EXCLUDED.event_root_code,
-
-    quad_class = EXCLUDED.quad_class,
-    goldstein_scale = EXCLUDED.goldstein_scale,
-
-    is_root_event = EXCLUDED.is_root_event,
-
-    num_mentions = EXCLUDED.num_mentions,
-    num_sources = EXCLUDED.num_sources,
-    num_articles = EXCLUDED.num_articles,
-    avg_tone = EXCLUDED.avg_tone,
-
-    location_name = EXCLUDED.location_name,
-    location_country_code =
-      EXCLUDED.location_country_code,
-
-    latitude = EXCLUDED.latitude,
-    longitude = EXCLUDED.longitude,
-
-    source_url = EXCLUDED.source_url,
-
-    updated_at = NOW()
+    ${UPDATE_ASSIGNMENTS.join(',\n    ')}
 `;
+
+const UPSERT_CHUNK_SIZE = 1_000;
 
 function eventToSqlValues(event: GdeltEvent): SqlValue[] {
   return [
@@ -136,23 +121,68 @@ function eventToSqlValues(event: GdeltEvent): SqlValue[] {
   ];
 }
 
-async function upsertEvent(client: PoolClient, event: GdeltEvent): Promise<void> {
-  await client.query(UPSERT_EVENT_SQL, eventToSqlValues(event));
+/*
+ * ON CONFLICT DO UPDATE cannot affect the same row twice in one
+ * statement, so duplicate IDs inside an export are collapsed first.
+ * The last occurrence wins, matching the old row-by-row behaviour.
+ */
+function dedupeEvents(events: readonly GdeltEvent[]): GdeltEvent[] {
+  const byId = new Map<string, GdeltEvent>();
+
+  for (const event of events) {
+    byId.set(event.id, event);
+  }
+
+  return [...byId.values()];
+}
+
+async function upsertEvents(client: PoolClient, events: readonly GdeltEvent[]): Promise<number> {
+  const unique = dedupeEvents(events);
+
+  for (let offset = 0; offset < unique.length; offset += UPSERT_CHUNK_SIZE) {
+    const chunk = unique.slice(offset, offset + UPSERT_CHUNK_SIZE);
+
+    const columns: SqlValue[][] = EVENT_COLUMNS.map(() => []);
+
+    for (const event of chunk) {
+      eventToSqlValues(event).forEach((value, index) => {
+        columns[index]?.push(value);
+      });
+    }
+
+    await client.query(BULK_UPSERT_EVENTS_SQL, columns);
+  }
+
+  return unique.length;
 }
 
 export async function isBatchIngested(exportUrl: string): Promise<boolean> {
-  const result = await db.query(
+  const completed = await getCompletedBatchUrls([exportUrl]);
+
+  return completed.has(exportUrl);
+}
+
+/*
+ * Resolves the completion state of many candidate exports in a
+ * single round trip (a 24h lookback checks ~97 URLs per run).
+ */
+export async function getCompletedBatchUrls(exportUrls: readonly string[]): Promise<Set<string>> {
+  if (exportUrls.length === 0) {
+    return new Set();
+  }
+
+  const result = await db.query<BatchRow>(
     `
       SELECT export_url
       FROM ingestion_batches
       WHERE
-        export_url = $1
+        export_url = ANY($1::text[])
         AND status = 'completed'
     `,
-    [exportUrl],
+    [exportUrls],
   );
 
-  return result.rows.length > 0;
+  return new Set(result.rows.map((row) => row.export_url));
 }
 
 export interface PersistBatchResult {
@@ -202,9 +232,7 @@ export async function persistGdeltBatch(
       };
     }
 
-    for (const event of parsed.events) {
-      await upsertEvent(client, event);
-    }
+    const upserted = await upsertEvents(client, parsed.events);
 
     await client.query(
       `
@@ -215,17 +243,17 @@ export async function persistGdeltBatch(
           ingested_at = NOW()
         WHERE export_url = $1
       `,
-      [exportUrl, parsed.events.length],
+      [exportUrl, upserted],
     );
 
     await client.query('COMMIT');
 
     return {
       skipped: false,
-      upsertedEvents: parsed.events.length,
+      upsertedEvents: upserted,
     };
   } catch (error: unknown) {
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK').catch(() => undefined);
     throw error;
   } finally {
     client.release();
