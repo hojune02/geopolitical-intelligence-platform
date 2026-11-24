@@ -811,7 +811,7 @@ export function GeopoliticalMap({
               >
                 <span className="cluster-event-actors">
                   {event.actor1Name ?? 'Unknown actor'}
-                  {' → '}
+                  {' – '}
                   {event.actor2Name ?? 'Unknown actor'}
                 </span>
 

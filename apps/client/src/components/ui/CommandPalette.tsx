@@ -5,19 +5,21 @@ import { useNavigate } from 'react-router';
 import { allCountries } from '../../lib/countries';
 import { OPEN_PALETTE_EVENT } from '../../lib/palette';
 
+import { Icon, type IconName } from './Icon';
+
 interface PaletteItem {
   id: string;
   label: string;
   hint: string;
-  icon: string;
+  icon: { kind: 'icon'; name: IconName } | { kind: 'code'; code: string };
   to: string;
   keywords: string;
 }
 
 const PAGES: PaletteItem[] = [
-  { id: 'p-brief', label: 'Briefing', hint: 'Escalation radar & top stories', icon: '◎', to: '/briefing', keywords: 'home radar brief stories escalation' },
-  { id: 'p-events', label: 'Event explorer', hint: 'Filter raw events', icon: '≡', to: '/dashboard', keywords: 'events list analytics trends' },
-  { id: 'p-map', label: 'Global map', hint: 'Clusters & heatmap', icon: '◍', to: '/dashboard/heatmap', keywords: 'map heatmap geography' },
+  { id: 'p-brief', label: 'Briefing', hint: 'Escalation radar & top stories', icon: { kind: 'icon', name: 'briefing' }, to: '/briefing', keywords: 'home radar brief stories escalation' },
+  { id: 'p-events', label: 'Event explorer', hint: 'Filter raw events', icon: { kind: 'icon', name: 'list' }, to: '/dashboard', keywords: 'events list analytics trends' },
+  { id: 'p-map', label: 'Global map', hint: 'Clusters & heatmap', icon: { kind: 'icon', name: 'map' }, to: '/dashboard/heatmap', keywords: 'map heatmap geography' },
 ];
 
 /*
@@ -38,7 +40,7 @@ export function CommandPalette() {
         id: `c-${country.code}`,
         label: country.name,
         hint: `Country dossier · ${country.code}`,
-        icon: country.flag,
+        icon: { kind: 'code' as const, code: country.iso2 ?? country.code },
         to: `/countries/${country.code}`,
         keywords: `${country.name} ${country.code} ${country.iso2 ?? ''}`.toLowerCase(),
       })),
@@ -173,7 +175,11 @@ export function CommandPalette() {
               role="option"
             >
               <span aria-hidden="true" className="palette-icon">
-                {item.icon}
+                {item.icon.kind === 'icon' ? (
+                  <Icon name={item.icon.name} />
+                ) : (
+                  <span className="country-mark">{item.icon.code}</span>
+                )}
               </span>
               <span className="palette-label">{item.label}</span>
               <span className="palette-hint">{item.hint}</span>
@@ -184,9 +190,15 @@ export function CommandPalette() {
         </ul>
 
         <div className="palette-footer">
-          <span>↑↓ navigate</span>
-          <span>↵ open</span>
-          <span>esc close</span>
+          <span>
+            <kbd>Up</kbd> <kbd>Down</kbd> navigate
+          </span>
+          <span>
+            <kbd>Enter</kbd> open
+          </span>
+          <span>
+            <kbd>Esc</kbd> close
+          </span>
         </div>
       </div>
     </div>

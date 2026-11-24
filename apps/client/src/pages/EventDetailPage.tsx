@@ -1,9 +1,12 @@
 import { Link, useLoaderData } from 'react-router';
 
 import { GoldsteinMeter } from '../components/insights/GoldsteinMeter';
+import { CountryMark } from '../components/ui/CountryMark';
+import { Icon } from '../components/ui/Icon';
 
 import { actorName, describeTone, QUAD_LABELS, rootLabel, rootStance, rootVerb } from '../lib/cameo';
 import { fromCameo, fromFips } from '../lib/countries';
+import { eventQualityNotes } from '../lib/quality';
 
 import type { EventDetailLoaderData } from '../router/loaders/event-detail.loader';
 
@@ -14,6 +17,7 @@ export function EventDetailPage() {
   const source = fromCameo(event.actors.source.countryCode);
   const target = fromCameo(event.actors.target.countryCode);
   const stance = rootStance(event.action.rootCode);
+  const notes = eventQualityNotes(event);
 
   const sourceName = actorName(event.actors.source.name, 'An unidentified actor');
   const targetName = actorName(event.actors.target.name, 'an unidentified party');
@@ -32,12 +36,29 @@ export function EventDetailPage() {
         <span className="story-tag">{QUAD_LABELS[event.action.quadClass.label]}</span>
         {place.fips !== null ? (
           <Link className="story-country" to={`/countries/${place.fips}`}>
-            {place.flag} {event.location?.name ?? place.name} · open dossier →
+            <CountryMark country={place} /> {event.location?.name ?? place.name} · open dossier{' '}
+            <Icon name="arrow-right" />
           </Link>
         ) : (
           <span>{event.location?.name ?? 'Location unknown'}</span>
         )}
       </div>
+
+      {notes.length > 0 ? (
+        <section aria-label="Data quality" className="quality-notes">
+          <p className="eyebrow">
+            <Icon name="warning" /> Data quality
+          </p>
+          <ul>
+            {notes.map((note) => (
+              <li className={`quality-note quality-${note.kind}`} key={note.kind}>
+                <strong>{note.title}</strong>
+                <span>{note.detail}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="kpi-grid">
         <div className="metric-card">
@@ -65,17 +86,17 @@ export function EventDetailPage() {
             <span className="actor-role">Source</span>
             <strong>{actorName(event.actors.source.name, 'Unknown')}</strong>
             <span>
-              {source.flag} {source.code === '' ? 'No country' : source.name}
+              <CountryMark country={source} /> {source.code === '' ? 'No country' : source.name}
             </span>
           </div>
           <span aria-hidden="true" className={`actor-arrow verb-${stance}`}>
-            →
+            <Icon name="arrow-right" />
           </span>
           <div>
             <span className="actor-role">Target</span>
             <strong>{actorName(event.actors.target.name, 'Unknown')}</strong>
             <span>
-              {target.flag} {target.code === '' ? 'No country' : target.name}
+              <CountryMark country={target} /> {target.code === '' ? 'No country' : target.name}
             </span>
           </div>
         </div>
@@ -91,7 +112,7 @@ export function EventDetailPage() {
         {event.sourceUrl !== null ? (
           <>
             <a className="story-headline" href={event.sourceUrl} rel="noopener noreferrer" target="_blank">
-              Read the source article ↗
+              Read the source article <Icon name="arrow-up-right" />
             </a>
 
             <p className="event-source-url">{event.sourceUrl}</p>
@@ -102,7 +123,9 @@ export function EventDetailPage() {
       </section>
 
       <div className="event-detail-nav">
-        <Link to="/briefing">← Briefing</Link>
+        <Link to="/briefing">
+          <Icon name="arrow-left" /> Briefing
+        </Link>
         <Link to="/dashboard">Event explorer</Link>
       </div>
     </section>

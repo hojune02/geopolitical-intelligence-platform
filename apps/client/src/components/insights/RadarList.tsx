@@ -4,6 +4,9 @@ import { fromFips } from '../../lib/countries';
 
 import type { RadarCountry } from '../../schemas/insights.schema';
 
+import { CountryMark } from '../ui/CountryMark';
+import { Icon } from '../ui/Icon';
+
 import { Sparkline } from './Sparkline';
 
 interface RadarListProps {
@@ -51,8 +54,8 @@ export function RadarList({ title, eyebrow, tone, countries, emptyText }: RadarL
               <Link className="radar-row" to={`/countries/${country.countryCode}`}>
                 <span className="radar-rank">{String(index + 1).padStart(2, '0')}</span>
 
-                <span aria-hidden="true" className="radar-flag">
-                  {info.flag}
+                <span className="radar-flag">
+                  <CountryMark country={info} />
                 </span>
 
                 <span className="radar-name">
@@ -74,7 +77,8 @@ export function RadarList({ title, eyebrow, tone, countries, emptyText }: RadarL
                     className={`radar-score ${country.conflictZ >= 0 ? 'up' : 'down'}`}
                     title="Conflict z-score versus this country's own baseline"
                   >
-                    {country.conflictZ >= 0 ? '▲' : '▼'} {Math.abs(country.conflictZ).toFixed(1)}σ
+                    <Icon name={country.conflictZ >= 0 ? 'up' : 'down'} />
+                    {Math.abs(country.conflictZ).toFixed(1)}σ
                   </span>
                 ) : null}
               </Link>

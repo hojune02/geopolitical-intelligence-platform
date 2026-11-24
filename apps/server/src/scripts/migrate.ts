@@ -7,6 +7,11 @@ const migrations = [
     version: '001_init',
     file: new URL('../../sql/001_init.sql', import.meta.url),
   },
+
+  {
+    version: '002_listing_source',
+    file: new URL('../../sql/002_listing_source.sql', import.meta.url),
+  },
 ] as const;
 
 async function ensureMigrationTable(): Promise<void> {

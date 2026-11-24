@@ -5,6 +5,9 @@ import { fromFips } from '../../lib/countries';
 
 import type { Story } from '../../schemas/insights.schema';
 
+import { CountryMark } from '../ui/CountryMark';
+import { Icon } from '../ui/Icon';
+
 import { GoldsteinMeter } from './GoldsteinMeter';
 
 interface StoryListProps {
@@ -37,13 +40,13 @@ export function StoryList({ stories, showCountry = true }: StoryListProps) {
             <div className="story-body">
               <a className="story-headline" href={story.url} rel="noopener noreferrer" target="_blank">
                 {headlineFor(story)}
-                <span aria-hidden="true"> ↗</span>
+                <Icon className="headline-icon" name="arrow-up-right" />
               </a>
 
               <div className="story-meta">
                 {showCountry && story.countryCode !== null ? (
                   <Link className="story-country" to={`/countries/${story.countryCode}`}>
-                    {country.flag} {country.name}
+                    <CountryMark country={country} /> {country.name}
                   </Link>
                 ) : null}
 
@@ -62,7 +65,7 @@ export function StoryList({ stories, showCountry = true }: StoryListProps) {
             <div className="story-side">
               <GoldsteinMeter compact value={story.averageGoldstein} />
               <Link className="story-event-link" to={`/events/${story.eventId}`}>
-                Event →
+                Event <Icon name="arrow-right" />
               </Link>
             </div>
           </li>

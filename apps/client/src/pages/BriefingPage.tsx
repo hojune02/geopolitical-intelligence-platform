@@ -12,7 +12,8 @@ import { useAsync } from '../hooks/useAsync';
 import { timeAgo } from '../lib/cameo';
 import { fromFips } from '../lib/countries';
 import { baselineLabel, briefingInsights, windowLabel } from '../lib/narrative';
-import { openCommandPalette } from '../lib/palette';
+import { openCommandPalette, shortcutLabel } from '../lib/palette';
+import { CountryMark } from '../components/ui/CountryMark';
 
 import { useWatchlistStore } from '../stores/useWatchlistStore';
 
@@ -65,7 +66,7 @@ export function BriefingPage() {
             <strong>{radarData === null ? '—' : String(radarData.totals.countries)}</strong>
           </div>
           <button className="palette-trigger" onClick={openCommandPalette} type="button">
-            Find a country <kbd>⌘K</kbd>
+            Find a country <kbd>{shortcutLabel()}</kbd>
           </button>
         </div>
       </header>
@@ -109,7 +110,7 @@ export function BriefingPage() {
               const info = fromFips(country.countryCode);
               return (
                 <Link className={`watch-card status-${country.status}`} key={country.countryCode} to={`/countries/${country.countryCode}`}>
-                  <span className="watch-flag">{info.flag}</span>
+                  <CountryMark country={info} />
                   <strong>{info.name}</strong>
                   <span>{country.status === 'steady' ? 'Normal range' : country.status}</span>
                   <small>
