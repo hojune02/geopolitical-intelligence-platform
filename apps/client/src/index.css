@@ -1921,3 +1921,14 @@ a.counterpart-row:hover .counterpart-name {
     font-size: 18px;
   }
 }
+
+@media (max-width: 800px) {
+  .header-search {
+    width: 40px;
+    justify-content: center;
+  }
+
+  .header-search .search-icon {
+    font-size: 20px;
+  }
+}
