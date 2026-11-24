@@ -16,6 +16,8 @@ import {
 import { fetchCountryDossier } from '../api/insights.api';
 
 import { GoldsteinMeter } from '../components/insights/GoldsteinMeter';
+import { CountryMark } from '../components/ui/CountryMark';
+import { Icon } from '../components/ui/Icon';
 import { StoryList } from '../components/insights/StoryList';
 
 import { useAsync } from '../hooks/useAsync';
@@ -75,9 +77,6 @@ export function CountryPage() {
         <div>
           <p className="eyebrow">Country dossier · {code}</p>
           <h1>
-            <span aria-hidden="true" className="country-flag">
-              {info.flag}
-            </span>{' '}
             {info.name}
           </h1>
           {radar !== null ? (
@@ -87,7 +86,8 @@ export function CountryPage() {
 
         <div className="country-actions">
           <button aria-pressed={pinned} onClick={() => { toggle(code); }} type="button">
-            {pinned ? '★ Watching' : '☆ Watch'}
+            <Icon name={pinned ? 'star-filled' : 'star'} />
+            {pinned ? 'Watching' : 'Watch'}
           </button>
           <button onClick={share} type="button">
             {copied ? 'Link copied' : 'Share'}
@@ -98,7 +98,9 @@ export function CountryPage() {
       {dossier.status === 404 ? (
         <section className="panel">
           <p>No events have been reported for {info.name} in the last 14 days.</p>
-          <Link to="/briefing">← Back to the briefing</Link>
+          <Link to="/briefing">
+            <Icon name="arrow-left" /> Back to the briefing
+          </Link>
         </section>
       ) : null}
 
@@ -209,7 +211,9 @@ export function CountryPage() {
                   const actor = fromCameo(counterpart.code);
                   const body = (
                     <>
-                      <span aria-hidden="true">{actor.flag}</span>
+                      <span className="counterpart-mark">
+                        <CountryMark country={actor} />
+                      </span>
                       <span className="counterpart-name">{actor.name}</span>
                       <span className="counterpart-split" title={`${String(Math.round(counterpart.conflictShare * 100))}% conflictual`}>
                         <span className="split-conflict" style={{ width: `${(counterpart.conflictShare * 100).toFixed(0)}%` }} />

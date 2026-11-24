@@ -46,8 +46,8 @@ export function briefingInsights(radar: RadarResponse['data'], stories: Story[])
       to: `/countries/${hottest.countryCode}`,
       text:
         ratio === null
-          ? `${info.flag} ${info.name} logged ${String(hottest.recent.conflictEvents)} conflict events in ${span}, far above its baseline.`
-          : `${info.flag} Conflict reporting in ${info.name} is running at ${formatMultiple(ratio)} its usual level over ${span}.`,
+          ? `${info.name} logged ${String(hottest.recent.conflictEvents)} conflict events in ${span}, far above its baseline.`
+          : `Conflict reporting in ${info.name} is running at ${formatMultiple(ratio)} its usual level over ${span}.`,
     });
   }
 
@@ -61,8 +61,8 @@ export function briefingInsights(radar: RadarResponse['data'], stories: Story[])
       to: `/countries/${calmest.countryCode}`,
       text:
         ratio === null
-          ? `${info.flag} ${info.name} is quieter than usual.`
-          : `${info.flag} ${info.name} is cooling: conflict events are ${String(Math.round((1 - ratio) * 100))}% below its baseline.`,
+          ? `${info.name} is quieter than usual.`
+          : `${info.name} is cooling: conflict events are ${String(Math.round((1 - ratio) * 100))}% below its baseline.`,
     });
   }
 
@@ -125,7 +125,7 @@ export function countrySummary(dossier: CountryDossier): string[] {
 
   if (foreign !== undefined) {
     const actor = fromCameo(foreign.code);
-    lines.push(`Leading foreign actor: ${actor.flag} ${actor.name}, in ${String(foreign.events)} events (${String(Math.round(foreign.conflictShare * 100))}% conflictual).`);
+    lines.push(`Leading foreign actor: ${actor.name}, in ${String(foreign.events)} events (${String(Math.round(foreign.conflictShare * 100))}% conflictual).`);
   }
 
   return lines;

@@ -79,6 +79,7 @@ export async function findRadarRows(): Promise<RadarRow[]> {
       WHERE
         e.added_at >= w.t_start
         AND e.location_country_code IS NOT NULL
+        AND NOT e.listing_source
     )
     SELECT
       cc,
@@ -131,6 +132,7 @@ export async function findSparklines(codes: readonly string[], buckets: number):
       WHERE
         e.added_at >= w.t_start
         AND e.location_country_code = ANY($1::text[])
+        AND NOT e.listing_source
       GROUP BY 1, 2
     `,
     [codes, buckets],
@@ -193,6 +195,7 @@ export async function findStories(options: {
       WHERE
         added_at > ${ANCHOR_SQL} - ($1::int * INTERVAL '1 hour')
         AND source_url IS NOT NULL
+        AND NOT listing_source
         ${countryFilter}
       GROUP BY source_url
       ORDER BY sum(num_mentions) DESC
@@ -229,6 +232,7 @@ export async function findCountryDaily(countryCode: string): Promise<DailyRow[]>
       WHERE
         location_country_code = $1
         AND added_at >= ${ANCHOR_SQL} - INTERVAL '14 days'
+        AND NOT listing_source
       GROUP BY 1
       ORDER BY 1
     `,
@@ -255,6 +259,7 @@ export async function findCountryActions(countryCode: string): Promise<ActionRow
       WHERE
         location_country_code = $1
         AND added_at >= ${ANCHOR_SQL} - INTERVAL '14 days'
+        AND NOT listing_source
       GROUP BY 1
       ORDER BY 2 DESC
     `,
@@ -284,6 +289,7 @@ export async function findCountryCounterparts(countryCode: string): Promise<Coun
         WHERE
           location_country_code = $1
           AND added_at >= ${ANCHOR_SQL} - INTERVAL '14 days'
+          AND NOT listing_source
       ),
       actors AS (
         SELECT actor1_country_code AS code, quad_class, goldstein_scale FROM scoped
@@ -322,6 +328,7 @@ export async function findCountryActors(countryCode: string): Promise<ActorRow[]
         WHERE
           location_country_code = $1
           AND added_at >= ${ANCHOR_SQL} - INTERVAL '14 days'
+          AND NOT listing_source
       ),
       actors AS (
         SELECT actor1_name AS name, goldstein_scale FROM scoped

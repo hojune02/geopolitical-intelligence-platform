@@ -4,14 +4,16 @@ import { CommandPalette } from '../components/ui/CommandPalette';
 
 import { GlobalModal } from '../components/ui/GlobalModal';
 
-import { openCommandPalette } from '../lib/palette';
+import { Icon, type IconName } from '../components/ui/Icon';
+
+import { openCommandPalette, shortcutLabel } from '../lib/palette';
 
 import { useThemeStore, type ThemeMode } from '../stores/useThemeStore';
 
-const THEME_ICON: Record<ThemeMode, string> = {
-  system: '◐',
-  light: '○',
-  dark: '●',
+const THEME_ICON: Record<ThemeMode, IconName> = {
+  system: 'theme-system',
+  light: 'theme-light',
+  dark: 'theme-dark',
 };
 
 const THEME_LABEL: Record<ThemeMode, string> = {
@@ -63,11 +65,9 @@ export function AppLayout() {
             onClick={openCommandPalette}
             type="button"
           >
-            <span aria-hidden="true" className="search-icon">
-              ⌕
-            </span>
+            <Icon className="search-icon" name="search" />
             <span className="search-label">Search countries</span>
-            <kbd>⌘K</kbd>
+            <kbd>{shortcutLabel()}</kbd>
           </button>
 
           <button
@@ -77,7 +77,7 @@ export function AppLayout() {
             title={THEME_LABEL[themeMode]}
             type="button"
           >
-            <span aria-hidden="true">{THEME_ICON[themeMode]}</span>
+            <Icon name={THEME_ICON[themeMode]} />
           </button>
         </div>
       </header>

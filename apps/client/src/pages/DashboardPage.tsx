@@ -4,6 +4,9 @@ import { AnalyticsPanel } from '../components/analytics/AnalyticsPanel';
 import { GoldsteinMeter } from '../components/insights/GoldsteinMeter';
 import { actorName, rootLabel, rootStance } from '../lib/cameo';
 import { fromFips } from '../lib/countries';
+import { isListingUrl } from '../lib/quality';
+import { CountryMark } from '../components/ui/CountryMark';
+import { Icon } from '../components/ui/Icon';
 import { useEventData } from '../hooks/useEventData';
 import { useFilterStore } from '../stores/useFilterStore';
 import { useUIStore } from '../stores/useUIStore';
@@ -37,7 +40,7 @@ export function DashboardPage() {
             Goldstein:{' '}
             <strong>
               {conflictIntensity.minGoldstein}
-              {' → '}
+              <Icon className="actor-arrow-inline" name="arrow-right" />
               {conflictIntensity.maxGoldstein}
             </strong>
           </span>
@@ -95,17 +98,24 @@ export function DashboardPage() {
                 return (
                   <article className={`event-card stance-${stance}`} key={event.id}>
                     <div className="event-card-top">
-                      <span className={`story-tag tag-${stance}`}>{rootLabel(event.action.rootCode)}</span>
+                      <span className="event-card-tags">
+                        <span className={`story-tag tag-${stance}`}>{rootLabel(event.action.rootCode)}</span>
+                        {isListingUrl(event.sourceUrl) ? (
+                          <span className="story-tag tag-doubtful" title="Read from a listing page, not an article">
+                            Doubtful source
+                          </span>
+                        ) : null}
+                      </span>
                       {country.fips !== null ? (
                         <Link className="story-country" to={`/countries/${country.fips}`}>
-                          {country.flag} {country.name}
+                          <CountryMark country={country} /> {country.name}
                         </Link>
                       ) : null}
                     </div>
 
                     <div className="event-card-actors">
                       <strong>{actorName(event.actors.source.name)}</strong>
-                      {' → '}
+                      <Icon className="actor-arrow-inline" name="arrow-right" />
                       <strong>{actorName(event.actors.target.name)}</strong>
                     </div>
 
@@ -117,7 +127,7 @@ export function DashboardPage() {
                       <Link to={`/events/${event.id}`}>Details</Link>
                       {event.sourceUrl !== null ? (
                         <a href={event.sourceUrl} rel="noopener noreferrer" target="_blank">
-                          Source ↗
+                          Source <Icon name="arrow-up-right" />
                         </a>
                       ) : null}
                     </div>
