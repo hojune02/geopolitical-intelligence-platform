@@ -178,8 +178,8 @@ export function BriefingPage() {
       <p className="method-note">
         How the radar works: each country&apos;s conflict events (CAMEO verbal and material conflict) in the
         recent window are compared with what its share of baseline coverage predicts, scaled to today&apos;s
-        global news volume. Scores are Poisson z-scores (σ); ≥2σ with at least 8 events counts as
-        escalating. GDELT records reported events, not verified facts.
+        global news volume. A country is flagged when the change is both statistically strong (Poisson
+        z ≥ 3σ) and large for that country (at least 1.5× or at most 0.67× of expected, 10+ events). GDELT records reported events, not verified facts.
       </p>
     </section>
   );

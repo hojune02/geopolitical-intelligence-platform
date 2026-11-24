@@ -66,7 +66,8 @@ export function briefingInsights(radar: RadarResponse['data'], stories: Story[])
     });
   }
 
-  const top = stories[0];
+  /* Prefer a story with a readable headline over a bare domain. */
+  const top = stories.find((story) => story.headline !== story.domain) ?? stories[0];
 
   if (top !== undefined) {
     const info = fromFips(top.countryCode);
