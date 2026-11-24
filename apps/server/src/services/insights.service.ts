@@ -304,6 +304,7 @@ export function headlineFromUrl(rawUrl: string): { headline: string; domain: str
 
       return text
         .replace(/\.(s?html?|php|aspx?|amp)$/i, '')
+        .replace(/^\d{4}[-_]\d{2}[-_]\d{2}[-_]/, '')
         .replace(/^\d+[._-]/, '')
         .replace(/[-_]\d{5,}$/, '')
         .replace(/[-_]?\d{4}[-_]\d{2}[-_]\d{2}$/, '')
